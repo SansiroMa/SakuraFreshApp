@@ -30,6 +30,11 @@ export default class Login extends Component {
         this.props.navigation.navigate('Main');
       };
 
+      _onGuestUserPress = async () => {
+        // await AsyncStorage.setItem('userToken', 'abc');
+        this.props.navigation.navigate('Main');
+      };
+      
     render() {
         return (
             <ScrollView style={{padding: 20}}>
@@ -74,7 +79,7 @@ export default class Login extends Component {
                         <Button
                         icon={{name: 'user-o', type: 'font-awesome'}}
                         buttonStyle={styles.registerButtonStyleLoginPage}
-                        onPress={this.props.onGuestUserPress}
+                        onPress={this._onGuestUserPress}
                         title='Guest User' />
 
                         <Button
