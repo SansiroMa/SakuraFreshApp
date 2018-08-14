@@ -422,10 +422,7 @@ export default class HomeScreen extends React.Component {
 
         var listData = this.state.listData
         
-        // let index = listData.indexOf(newItem);
-
         let index = listData.map(obj => obj.key).indexOf(inputStr);
-
 
         if(index >= 0) // If duplicate key
         {
@@ -477,8 +474,6 @@ export default class HomeScreen extends React.Component {
         color = '#ff9797'
         // onPress={()=> this._deleteButtonclick(item)} 
         />
-
- 
      </View>
     );
   }
@@ -542,6 +537,7 @@ export default class HomeScreen extends React.Component {
               // onChangeText={(text) => this.setState({text: text})}
               // onEndEditing={() => this._onChangeText()} 
               // onSubmitEditing={() => this._onChangeText()} 
+
               onSubmitEditing={(event) => this._onSubmitEditing( event.nativeEvent.text)}
               clearButtonMode="always"
             />
