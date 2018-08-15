@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import {
     ScrollView,
-    Text,
+    // Text,
     TextInput,
     View,
     // Button,
@@ -10,7 +10,7 @@ import {
     AsyncStorage,
 } from 'react-native';
 
-import { Button,Icon  } from 'react-native-elements';
+import { Button,Icon,FormLabel, FormInput, FormValidationMessage,Text } from 'react-native-elements';
 
 export default class Login extends Component {
 
@@ -21,20 +21,80 @@ export default class Login extends Component {
           username: '',
           password: '',
           isLoggingIn: false,
-          message: ''
+          message: '',
+          userNameError: null,
+          passwordError: null
         };
       }
 
+      _onUserNameChangeText(text)
+      {
+        // TBD
+      }
+
+      _onPasswordChangeText(text)
+      {
+      // TBD
+      }
+
       _signInAsync = async () => {
-        await AsyncStorage.setItem('userToken', 'abc');
-        this.props.navigation.navigate('Main');
+        let userNameCheck = false;
+        let passwordCheck = false;
+
+        if(this.state.username)
+        {
+            userNameCheck = true;
+        }
+
+        if(this.state.password)
+        {
+            passwordCheck = true;
+        }
+
+        if(userNameCheck & passwordCheck)
+        {
+            await AsyncStorage.setItem('userToken', 'abc');
+            this.props.navigation.navigate('Main');
+        }
+        else
+        {
+            if(!userNameCheck)
+            {
+                this._userNameErrorHandler('Error001','User Name is required!');
+            }
+
+            if(!passwordCheck)
+            {
+                this._passwordErrorHandler('Error002','Password is required!');
+            }
+        }
       };
 
       _onGuestUserPress = async () => {
         // await AsyncStorage.setItem('userToken', 'abc');
         this.props.navigation.navigate('Main');
+      
       };
       
+      _userNameErrorHandler(code, message) {
+        this.setState({
+            userNameError: !code ? null :
+            {
+              code,
+              message,
+            }
+        })
+      }
+      _passwordErrorHandler(code, message) {
+        this.setState({
+            passwordError: !code ? null :
+            {
+              code,
+              message,
+            }
+        })
+      }
+
     render() {
         return (
             <ScrollView style={{padding: 20}}>
@@ -50,26 +110,52 @@ export default class Login extends Component {
                     />
                 </View>
 
-                <Text 
-                    style={{fontSize: 27}}>
-                    Login
-                </Text>
-
                 <View style={styles.container}>
-                    <TextInput
-                        value={this.state.username}
-                        onChangeText={(username) => this.setState({ username })}
-                        placeholder={'Username'}
-                        style={styles.input}
-                        />
-                    <TextInput
-                        value={this.state.password}
-                        onChangeText={(password) => this.setState({ password })}
-                        placeholder={'Password'}
-                        secureTextEntry={true}
-                        style={styles.input}
-                        />
+                
+                    <View>
+                        <Text h2>
+                            SIGN IN
+                        </Text>
+                    </View>
 
+                    <View>
+                        <FormLabel>Name</FormLabel>
+                        <FormInput 
+                            inputStyle ={{paddingLeft: 1}}
+                            onChangeText={(username) => this.setState({ username : username, userNameError:null })}
+                            underlineColorAndroid="#808080"
+                            placeholder={'Username'}
+                            shake={this.state.userNameError}
+                        />
+                        <FormValidationMessage>{this.state.userNameError ? "User Name is required": null}</FormValidationMessage>
+
+                        <FormLabel>Password</FormLabel>
+                        <FormInput 
+                            inputStyle ={{paddingLeft: 1}}
+                            onChangeText={(password) => this.setState({ password:password,passwordError:null })}
+                            underlineColorAndroid="#808080"
+                            placeholder={'Password'}
+                            secureTextEntry={true}
+                            shake={this.state.passwordError}
+                        />
+                        <FormValidationMessage>{this.state.passwordError ? "Password is required": null}</FormValidationMessage>
+
+                            {/* <TextInput
+                                value={this.state.username}
+                                onChangeText={(username) => this.setState({ username })}
+                                placeholder={'Username'}
+                                style={styles.input}
+                                underlineColorAndroid='transparent'
+                                />
+                            <TextInput
+                                value={this.state.password}
+                                onChangeText={(password) => this.setState({ password })}
+                                placeholder={'Password'}
+                                secureTextEntry={true}
+                                style={styles.input}
+                                underlineColorAndroid='transparent'
+                                /> */}
+                    </View>
                     <View style = {styles.buttonContainerLoginPage}> 
                         {/* <Button
                             icon={{name: 'registered', type: 'font-awesome'}}
@@ -99,18 +185,21 @@ export default class Login extends Component {
 const styles = StyleSheet.create({
     container: {
       flex: 1,
+      flexDirection: 'column',
       alignItems: 'center',
-      justifyContent: 'center',
+      justifyContent: 'space-between',
+      paddingLeft: 10
     //   backgroundColor: '#ecf0f1',
     },
     input: {
       width: 340,
       height: 44,
-      padding: 10,
+      padding: 0,
+      paddingLeft: 10,
       borderWidth: 1,
       borderColor: 'gray',
     //   marginBottom: 10,
-      margin: 10,
+      margin: 0,
     },
     welcomeContainer: {
         alignItems: 'flex-start',
