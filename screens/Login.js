@@ -8,6 +8,7 @@ import {
     StyleSheet,
     Image,
     AsyncStorage,
+    Platform,
 } from 'react-native';
 
 import { Button,Icon,FormLabel, FormInput, FormValidationMessage,Text } from 'react-native-elements';
@@ -72,7 +73,7 @@ export default class Login extends Component {
 
       _onGuestUserPress = async () => {
         // await AsyncStorage.setItem('userToken', 'abc');
-        this.props.navigation.navigate('Main');
+        this.props.navigation.navigate('Guest');
       
       };
       
@@ -121,22 +122,24 @@ export default class Login extends Component {
                     <View>
                         <FormLabel>Name</FormLabel>
                         <FormInput 
-                            inputStyle ={{paddingLeft: 1}}
+                            inputStyle ={{paddingLeft: (Platform.OS) == 'ios' ? 0 : 5}}
                             onChangeText={(username) => this.setState({ username : username, userNameError:null })}
                             underlineColorAndroid="#808080"
                             placeholder={'Username'}
                             shake={this.state.userNameError}
+                            clearButtonMode="always"
                         />
                         <FormValidationMessage>{this.state.userNameError ? "User Name is required": null}</FormValidationMessage>
 
                         <FormLabel>Password</FormLabel>
                         <FormInput 
-                            inputStyle ={{paddingLeft: 1}}
+                            inputStyle ={{paddingLeft: (Platform.OS) == 'ios' ? 0 : 5}}
                             onChangeText={(password) => this.setState({ password:password,passwordError:null })}
                             underlineColorAndroid="#808080"
                             placeholder={'Password'}
                             secureTextEntry={true}
                             shake={this.state.passwordError}
+                            clearButtonMode="always"
                         />
                         <FormValidationMessage>{this.state.passwordError ? "Password is required": null}</FormValidationMessage>
 

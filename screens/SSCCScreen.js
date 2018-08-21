@@ -27,23 +27,25 @@ import { WebBrowser } from 'expo';
 import { MonoText } from '../components/StyledText';
 import Swipeout from 'react-native-swipeout';
 import { Button,Icon  } from 'react-native-elements';
+import RNTextInput from 'react-native-text-input-enhance';
 
 const window = Dimensions.get('window');
 const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+
 const flatListData =[
-  // {key: 'Key0',value: 'barcode00300300030'},
-  // {key: 'Key1',value: 'barcode121212121212'},
-  // {key: 'Key2',value: 'barcode23232323232'},
-  // {key: 'Key3',value: 'barcode33333333333'},
+  {key: 'Key0',value: 'barcode00300300030'},
+  {key: 'Key1',value: 'barcode121212121212'},
+  {key: 'Key2',value: 'barcode23232323232'},
+  {key: 'Key3',value: 'barcode33333333333'},
 ]
 
 // *******************************************************************************************************
-// HomeScreen-Main
+// SSCCScreen-Main
 // *******************************************************************************************************
-export default class HomeScreen extends React.Component {
+export default class SSCCScreen extends React.Component {
   static navigationOptions = {
     // header: null,
-    title: 'SSCC-GTIN',
+    title: 'SSCC-SSCC',
   };
 
   constructor(props) {
@@ -55,8 +57,7 @@ export default class HomeScreen extends React.Component {
       deletedRowKey: null,
       isShowingText: true,
       updateFlag : true,
-      listData : flatListData,
-      mainCode: null
+      listData : flatListData
     });
 
     this._onPressSendButton = this._onPressSendButton.bind(this);
@@ -127,7 +128,7 @@ export default class HomeScreen extends React.Component {
           
           var listData = this.state.listData
           listData = [];
-          this.setState({listData:listData, mainCode: null});
+          this.setState({listData});
 
           this.setState(previousState => {
             return { isShowingText: !previousState.isShowingText, text:'' };
@@ -158,7 +159,7 @@ export default class HomeScreen extends React.Component {
 
           var listData = this.state.listData
           listData = [];
-          this.setState({listData:listData, mainCode: null});
+          this.setState({listData});
 
           this.setState(previousState => {
             return { isShowingText: !previousState.isShowingText, text:'' };
@@ -181,10 +182,6 @@ export default class HomeScreen extends React.Component {
 
   }
   _onChangeText() {
-
-    // var inputStr = String.prototype.trim.call(this.state.text )
-
-    // this.InputTextFocusRef.clear();
 
     var inputStr = this.state.text.replace(/\s+/g,"");
 
@@ -243,31 +240,22 @@ export default class HomeScreen extends React.Component {
   }
 
   _onSubmitEditing(InputText)
+  
   {
-    // Dirty workaround to clear text
-    if (Platform.OS === 'ios') 
-    {
+    if (Platform.OS === 'ios') {
       this.InputTextFocusRef.setNativeProps({ text: ' ' });
     }
     
-    setTimeout(() => 
-    {
+    setTimeout(() => {
       this.InputTextFocusRef.setNativeProps({ text: '' });
     },5);
+   
 
-    // Check Text and process
     if( InputText != '')
     {
       var inputStr = InputText.replace(/\s+/g,"");
 
-      if(!this.state.mainCode)
-      {
-        this.setState({
-          mainCode: inputStr
-        })
-      }
-
-      else if(inputStr.toUpperCase() == 'CONFIRMANDSEND')
+      if(inputStr.toUpperCase() == 'CONFIRMANDSEND')
       {
         this._onPressSendButton();
       }
@@ -317,73 +305,32 @@ export default class HomeScreen extends React.Component {
   }
 
   // retain focus for InputText
-  _onRetainFocus() 
-  {
+  _onRetainFocus() {
+  
     var InputTextFocusRef = this.InputTextFocusRef;
 
     InputTextFocusRef.focus();    
     
   }
 
-  _onCreateEmptyView() 
-  {
-
-    let emptyView;
-
-    if(this.state.mainCode)
-    {
-      emptyView = (
-        <View>      
-            <Text style={{fontSize: 20, alignSelf: 'center'}}>SSCC is there!</Text>
-
-            <Icon                                          
-            name='battery-half'
-            type='font-awesome'
-            size = {80}
-            color = 'rgba(111, 202, 186, 1)'
-            // onPress={()=> this._deleteButtonclick(item)} 
-            />
-        </View>
-
-      );
-
-    }
-    else
-    {
-      emptyView = (
-        <View>      
-          <Text style={{fontSize: 20, alignSelf: 'center'}}>No Data!</Text>
-
-          <Icon                                          
-          name='battery-empty'
-          type='font-awesome'
-          size = {80}
-          color = '#ff9797'
-          // onPress={()=> this._deleteButtonclick(item)} 
-          />
-       </View>
-      )
-
-    }
+  _onCreateEmptyView() {
 
     return (
-      <View>      
-        <Text style={{fontSize: 20, alignSelf: 'center'}}>{this.state.mainCode ? 'SSCC is there!' : 'No Data!'}</Text>
+     
+     <View>      
+        <Text style={{fontSize: 20, alignSelf: 'center'}}>No Data!</Text>
 
         <Icon                                          
-        name={this.state.mainCode ? 'battery-half': 'battery-empty'}
+        name='battery-empty'
         type='font-awesome'
         size = {80}
-        color = {this.state.mainCode ? '#97ff97': '#ff9797'}
-        // onPress={()=> this._deleteButtonclick(item)} 
+        color = '#ff9797'
         />
-    </View>
-
+     </View>
     );
   }
 
-  _footer = function () 
-  {
+  _footer = function () {
     var desc = null
     if(true)
       desc = (
@@ -391,8 +338,6 @@ export default class HomeScreen extends React.Component {
         name='train'
         type='font-awesome'
         size = {14}
-        // color = '#ff9797'
-        // onPress={()=> this._deleteButtonclick(item)} 
         />
       )
     
@@ -401,29 +346,14 @@ export default class HomeScreen extends React.Component {
     );
   }
 
-  render() 
-  {
+
+  render() {
+
     var TouchableElement = TouchableHighlight;
 
     if (Platform.OS === 'android') 
     {
      TouchableElement = TouchableNativeFeedback;
-    }
-
-    let listTitle;
-
-    if(this.state.mainCode)
-    {
-      listTitle = (
-          <Text style={styles.sectionHeaderMainCode}>{'#SSCC: ' + this.state.mainCode }</Text>
-      );     
-    }
-    else
-    {
-      listTitle = (
-          <Text style={styles.sectionHeader}>#GTIN + SNO</Text>
-
-      );
     }
 
     return (
@@ -455,8 +385,7 @@ export default class HomeScreen extends React.Component {
           </View>
 
           {/* Body*/ }         
-          {/* <Text style={styles.sectionHeader}>{this.state.mainCode ? 'SSCC: ' + this.state.mainCode : '#G TIN + SNO'}</Text> */}
-          {listTitle}
+          <Text style={styles.sectionHeader}>#SSCC</Text>
           <View style={{flex: 1, marginTop: 1,marginRight: 2,marginLeft: 2}} >
               <FlatList
                 ref = 'flatlistRef'
@@ -467,51 +396,41 @@ export default class HomeScreen extends React.Component {
                 ListFooterComponent={this._footer} 
 
                 renderItem={({item,index}) =>{
-                  return(
-                    <View> 
-                        <View style={styles.navBar} > 
-                                <View style={styles.leftContainer}>    
-                                  <Text style={styles.flatListItem}>{index + 1}</Text>  
-                                  <Text style={styles.flatListItem}>{item.value}</Text> 
-                                </View>  
+                    return(
+                        <View> 
+                            <View style={styles.navBar} > 
+                                    <View style={styles.leftContainer}>    
+                                    <Text style={styles.flatListItem}>{index + 1}</Text>  
+                                    <Text style={styles.flatListItem}>{item.value}</Text> 
+                                    </View>  
 
-                                <View>  
-                                  <Icon                                          
-                                      name='minus-circle'
-                                      type='font-awesome'
-                                      color = '#ff9797'
-                                      onPress={()=> this._deleteButtonclick(item)} />
-                                </View>                                                                                                               
+                                    <View>  
+                                    <Icon                                          
+                                        name='minus-circle'
+                                        type='font-awesome'
+                                        color = '#ff9797'
+                                        onPress={()=> this._deleteButtonclick(item)} />
+                                    </View>                                                                                                               
+                            </View>  
+        
+                            <View style={{
+                                height: 1,
+                                borderBottomWidth: StyleSheet.hairlineWidth,
+                                borderBottomColor: 'skyblue'    
+                            }}>
+                            </View>
+
                         </View>  
-    
-                        <View style={{
-                            height: 1,
-                            borderBottomWidth: StyleSheet.hairlineWidth,
-                            borderBottomColor: 'skyblue'    
-                        }}>
-                        </View>
 
-                    </View>  
-
-                  );
+                    );
                 }}
+
+
               >
               </FlatList>
           </View>
          
-          {/* Footer*/ }
-          
-          {/* <View>
-            <TouchableElement
-              activeOpacity={0.6}
-              underlayColor={'white'}
-              onPress={() => this._onPressButton()}>
-              <Text style={styles.button}>Tap</Text>
-            </TouchableElement>
-          </View> */}
-
           <View style = {styles.buttonContainerHomePage}> 
-
             <Button
                 icon={{name: 'trash', type: 'font-awesome'}}
                 buttonStyle={styles.clearButtonStyleHomePage}
@@ -523,15 +442,6 @@ export default class HomeScreen extends React.Component {
                 onPress={this._onPressSendButton}
                 title='Send' />
           </View>
-
-
-        {/* <View style={styles.tabBarInfoContainer}>
-          <Text style={styles.tabBarInfoText}>This is a tab bar. You can edit it in:</Text>
-          <View style={[styles.codeHighlightContainer, styles.navigationFilename]}>
-            <MonoText style={styles.codeHighlightText}>navigation/MainTabNavigator.js</MonoText>
-          </View>
-        </View> */}
-
       </View>
   
     );
@@ -693,16 +603,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     backgroundColor: 'rgba(247,247,247,1.0)',
   },
-  sectionHeaderMainCode: {
-    paddingTop: 2,
-    paddingLeft: 10,
-    paddingRight: 10,
-    paddingBottom: 2,
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#1bc461',
-  },
-
   item: {
     padding: 10,
     fontSize: 18,

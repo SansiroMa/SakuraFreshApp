@@ -10,6 +10,7 @@ import SettingsScreen from '../screens/SettingsScreen';
 
 // const { navigate } = this.props.navigation;
 
+
 const HomeStack = createStackNavigator({
   Home: HomeScreen,
 });
@@ -77,7 +78,7 @@ SettingsStack.navigationOptions = {
 
 
 export default createBottomTabNavigator({
-  HomeStack,
+  // HomeStack,
   // SSCCStack,
   LinksStack,
   SettingsStack,
