@@ -54,8 +54,45 @@ export default class Login extends Component {
 
         if(userNameCheck & passwordCheck)
         {
-            await AsyncStorage.setItem('userToken', 'abc');
-            this.props.navigation.navigate('Main');
+            fetch('http://153.149.186.12:9091/api/auth/login',
+        {
+            method: 'POST',
+            headers: 
+                    {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    },
+
+            body: JSON.stringify({
+                    username: 'ddddd2x',
+                    password: 'sss',
+                }),
+        })
+          .then((response) => response.json())
+          .then((responseJson) => {
+                 
+            // setTimeout(() => {
+    
+             
+            // }, 5000);
+            
+            console.log(responseJson);
+    
+            // alert(responseJson.user.email);
+            
+            if(responseJson.token)
+            {
+                AsyncStorage.setItem('userToken', 'abc');
+                this.props.navigation.navigate('Main');
+            }
+
+        
+          })
+          .catch((error) => {
+            console.error(error);
+          }); 
+
+
         }
         else
         {
