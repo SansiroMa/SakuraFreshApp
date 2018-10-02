@@ -55,44 +55,40 @@ export default class Login extends Component {
         if(userNameCheck & passwordCheck)
         {
             fetch('http://153.149.186.12:9091/api/auth/login',
-        {
-            method: 'POST',
-            headers: 
-                    {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    },
-
-            body: JSON.stringify({
-                    username: 'ddddd2x',
-                    password: 'sss',
-                }),
-        })
-          .then((response) => response.json())
-          .then((responseJson) => {
-                 
-            // setTimeout(() => {
-    
-             
-            // }, 5000);
-            
-            console.log(responseJson);
-    
-            // alert(responseJson.user.email);
-            
-            if(responseJson.token)
             {
-                AsyncStorage.setItem('userToken', 'abc');
-                this.props.navigation.navigate('Main');
-            }
+                method: 'POST',
+                headers: 
+                        {
+                        Accept: 'application/json',
+                        'Content-Type': 'application/json',
+                        },
 
+                body: JSON.stringify({
+                        username: 'ddddd2x',
+                        password: 'sss',
+                    }),
+            })
+            .then((response) => response.json())
+            .then((responseJson) => {
+                             
+                console.log(responseJson);
         
-          })
-          .catch((error) => {
-            console.error(error);
-          }); 
+                // alert(responseJson.user.email);
+                
+                if(responseJson.token)
+                {
+                    AsyncStorage.setItem('userToken', responseJson.token);
+                    AsyncStorage.setItem('userInfo', responseJson);
 
-
+                    this.props.navigation.navigate('Main');
+                }
+                else
+                {
+                    alert("Error, User Token Not Found!");
+                }
+            }).catch((error) => {
+                console.error(error);
+            }); 
         }
         else
         {
@@ -110,8 +106,7 @@ export default class Login extends Component {
 
       _onGuestUserPress = async () => {
         // await AsyncStorage.setItem('userToken', 'abc');
-        this.props.navigation.navigate('Guest');
-      
+        this.props.navigation.navigate('Guest');  
       };
       
       _userNameErrorHandler(code, message) {
