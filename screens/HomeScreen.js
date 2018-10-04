@@ -3,30 +3,33 @@ import {
   Alert,
   Image,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
-  TouchableOpacity,
   TouchableHighlight,
   TouchableNativeFeedback,
   View,
   FlatList,
-  SectionList,
-  AppRegistry,
-  NativeAppEventEmitter,
-  NativeEventEmitter,
-  NativeModules,
-  PermissionsAndroid,
   ListView,
-  AppState,
   Dimensions,
+  AsyncStorage,
+  Picker,
 } from 'react-native';
-import { WebBrowser } from 'expo';
 
-import { MonoText } from '../components/StyledText';
-import Swipeout from 'react-native-swipeout';
+import { Permissions,WebBrowser,Notifications } from 'expo';
 import { Button,Icon  } from 'react-native-elements';
+import PopupDialog,
+    { DialogTitle,  
+      SlideAnimation,
+      ScaleAnimation,
+      FadeAnimation
+    } from 'react-native-popup-dialog';
+
+const slideAnimation = new SlideAnimation({ slideFrom: 'bottom' });
+const scaleAnimation = new ScaleAnimation();
+const fadeAnimation = new FadeAnimation({ animationDuration: 150 });
+
+//import { registerForPushNotificationsAsync } from '@expo/samples/registerForPushNotificationsAsync';
 
 const window = Dimensions.get('window');
 const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
@@ -56,15 +59,98 @@ export default class HomeScreen extends React.Component {
       isShowingText: true,
       updateFlag : true,
       listData : flatListData,
-      mainCode: null
+      mainCode: null,
+      notification: {},
+      notificationToken:null,
+      notificationTitle:null,
+      notificationBody:null,
+      barCodeModal:'New Item',
     });
 
     this._onPressSendButton = this._onPressSendButton.bind(this);
     this._onPressClearButton = this._onPressClearButton.bind(this);
     this._deleteButtonclick = this._deleteButtonclick.bind(this);  
+
+    this.handleConfirm = this.handleConfirm.bind(this);
+    this.handleReport = this.handleReport.bind(this);
+    this.onEventPress = this.onEventPress.bind(this)
   }
 
-  // componentDidMount= ()=>{}
+  componentDidMount() {
+    //const notificationToken =   this.registerForPushNotificationsAsync();
+    
+    // this.setState({notificationToken:notificationToken});
+
+    this.registerForPushNotificationsAsync()
+
+    //alert(JSON.stringify(notificationToken));
+    
+    // Handle notifications that are received or selected while the app
+    // is open. If the app was closed and then opened by tapping the
+    // notification (rather than just tapping the app icon to open it),
+    // this function will fire on the next tick after the app starts
+    // with the notification data.
+    this._notificationSubscription = Notifications.addListener(this._handleNotification);
+  }
+
+   // As of now, we save it to local, and push notifications from device
+  // In future, will post the token to our server from where we can retrieve it to send push notifications.
+  //const PUSH_ENDPOINT = 'https://your-server.com/users/push-token';
+
+  registerForPushNotificationsAsync= async () => {
+    const { status: existingStatus } = await Permissions.getAsync(
+      Permissions.NOTIFICATIONS
+    );
+    let finalStatus = existingStatus;
+
+    // only ask if permissions have not already been determined, because
+    // iOS won't necessarily prompt the user a second time.
+    if (existingStatus !== 'granted') {
+      // Android remote notification permissions are granted during the app
+      // install, so this will only ask on iOS
+      const { status } = await Permissions.askAsync(Permissions.NOTIFICATIONS);
+      finalStatus = status;
+    }
+
+    // Stop here if the user did not grant permissions
+    if (finalStatus !== 'granted') {
+      return;
+    }
+
+    // Get the token that uniquely identifies this device
+    let token = await Notifications.getExpoPushTokenAsync();
+
+    AsyncStorage.setItem('notificationToken', token);
+    this.setState({notificationToken:token});
+    //console.log(token);
+    //alert(JSON.stringify(token))
+    //return token;
+
+    // As of now, we save it to local, and push notifications from device
+    // In future, will post the token to our server from where we can retrieve it to send push notifications.
+    /*
+    return fetch(PUSH_ENDPOINT, {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        token: {
+          value: token,
+        },
+        user: {
+          username: 'Brent',
+        },
+      }),
+    });
+    */
+  }
+
+  _handleNotification = (notification) => {
+    this.setState({notification: notification});
+    alert("notification:"+ notification);
+  };
 
   refreshFlatList = (deletedKey) => {
 
@@ -78,25 +164,66 @@ export default class HomeScreen extends React.Component {
     });
   }
 
+  sendPushNotification(token = this.state.notificationToken, title = this.state.notificationTitle, body = this.state.notificationBody) {
+    return fetch('https://exp.host/--/api/v2/push/send', {
+      body: JSON.stringify({
+        to: token,
+        title: title,
+        body: body,
+       // data: { message: `${title} - ${body}` },
+      }),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+    });
+  }
+
   getMoviesFromApiAsync() {
     fetch('https://facebook.github.io/react-native/movies.json')
       .then((response) => response.json())
       .then((responseJson) => {
-             
-        setTimeout(() => {
+        
+        console.log(responseJson.movies);
+        this.setState({notificationTitle : "Message Reveived!",notificationBody :"GTINs have been sent to server successfully"});
 
-          console.log(responseJson.movies);
-
-          // alert('Response', responseJson.movies);
-        }, 5000);
-
-
+        if(this.state.notificationToken)
+        {
+          setTimeout(() => {  
+            var responseOfPush = this.sendPushNotification();
+            console.log(JSON.stringify(responseOfPush));
+          }, 5000);
+        }
       })
       .catch((error) => {
         console.error(error);
       });    
   }
   
+   // When timeline item is clicked
+  onEventPress(data){
+    // this.setState({
+    //   selected: data,
+    //   time: data.time,
+    //   title: data.title,
+    //   description: data.description,
+    //   imageUrl: data.imageUrl})
+    
+      this.popupDialog.show();
+  }
+  
+  // When confirm button is clicked 
+  handleConfirm()
+  {
+    this.popupDialog.dismiss();
+  }
+
+  // when Report button is clicked
+  handleReport()
+  {
+    this.popupDialog.dismiss();
+  }
+
   _onSendWithoutConfirm() {
 
     console.log('_onSendWithoutConfirm ');
@@ -439,8 +566,54 @@ export default class HomeScreen extends React.Component {
               }
               style={styles.welcomeImage}
             />
+
+            <Button
+              icon={{name: 'check-circle', type: 'font-awesome'}}
+              buttonStyle={styles.popUpButtonStyle}
+              onPress={this.onEventPress}
+              title={this.state.barCodeModal} />
           </View>
-                 
+
+          <PopupDialog
+              dialogAnimation={slideAnimation}
+              dialogTitle={<DialogTitle title='Select An Operation' />}
+              ref={(popupDialog) => { this.popupDialog = popupDialog; }}
+              dialogStyle={{marginTop:-200}}
+            >
+              {/* <View>
+                <Text>{this.state.description} </Text>
+              </View> */}
+              <View tyle = {styles.popupBodyContainer}>   
+                <View style = {styles.pickerStyle}>
+                  <Picker
+                    selectedValue={this.state.barCodeModal}
+                    onValueChange={barCodeModal => this.setState({ barCodeModal })}
+                    style={{ width: 160 }}
+                    mode="dropdown">
+                    <Picker.Item label="New Item" value="New Item" />
+                    <Picker.Item label="Case" value="Case" />
+                    <Picker.Item label="Pallet" value="Pallet" />
+                    <Picker.Item label="Instransit" value="Instransit" />
+                  </Picker>
+                </View>
+
+                {/* <View style = {styles.buttonContainerStyle}> 
+                  <Button
+                      icon={{name: 'envelope', type: 'font-awesome'}}
+                      buttonStyle={styles.cancelButtonStylePopUp}
+                      onPress={this.handleReport}
+                      title='Report' />
+                  <Button
+                      icon={{name: 'check-circle', type: 'font-awesome'}}
+                      buttonStyle={styles.confirmButtonStylePopUp}
+                      onPress={this.handleConfirm}
+                      title='Confirm' />
+                </View>   */}
+              </View>               
+            </PopupDialog>
+
+
+
           <View>
             <Text style={styles.sectionHeader}>Type a Barcode</Text>
             <TextInput
@@ -595,9 +768,6 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
     borderColor: 'black',
   },
-  buttonContainer: {
-    margin: 20
-  },
   button: {
     color: 'blue'
   },
@@ -612,17 +782,16 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   welcomeContainer: {
-    alignItems: 'flex-start',
+    //alignItems: 'stretch',
+    justifyContent: 'space-between',
+    flexDirection: 'row',
     marginTop: 1,
     marginBottom: 5,
-    marginLeft: 10,
   },
   welcomeImage: {
     width: 100,
     height: 80,
     resizeMode: 'contain',
-    marginTop: 3,
-    marginLeft: -10,
   },
   getStartedContainer: {
     alignItems: 'center',
@@ -765,6 +934,52 @@ const styles = StyleSheet.create({
   {
     height: 20, 
     paddingTop: 5
+  },
+
+  popUpButtonStyle:
+  {
+    height: 40, 
+    width: 120, 
+    backgroundColor: 
+    'rgba(111, 202, 186, 1)', 
+    borderRadius: 5 
+  },
+
+  popupBodyContainer:
+  {
+    flex: 1,
+    flexDirection: 'column',
+    backgroundColor:'white',
+    justifyContent: 'center',
+  },
+  pickerStyle:
+  {
+    flexDirection: 'row',
+    backgroundColor:'white',
+    justifyContent: 'center',
+  },
+  buttonContainerStyle:
+  {
+    flexDirection: 'row',
+    backgroundColor:'white',
+    justifyContent: 'space-around',
+    alignItems: 'center',
+  },
+  cancelButtonStylePopUp:
+  {
+    height: 40, 
+    width: 120, 
+    backgroundColor: 
+    '#ff9797', 
+    borderRadius: 5 
+  },
+  confirmButtonStylePopUp:
+  {
+    height: 40, 
+    width: 120, 
+    backgroundColor: 
+    'rgba(111, 202, 186, 1)', 
+    borderRadius: 5 
   },
 
 });
