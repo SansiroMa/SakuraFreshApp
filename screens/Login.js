@@ -64,8 +64,8 @@ export default class Login extends Component {
                         },
 
                 body: JSON.stringify({
-                        username: 'ddddd2x',
-                        password: 'sss',
+                        username: this.state.username,
+                        password: this.state.password,
                     }),
             })
             .then((response) => response.json())
@@ -73,12 +73,14 @@ export default class Login extends Component {
                              
                 console.log(responseJson);
         
-                // alert(responseJson.user.email);
+                //alert(JSON.stringify(responseJson));
                 
                 if(responseJson.token)
                 {
                     AsyncStorage.setItem('userToken', responseJson.token);
-                    AsyncStorage.setItem('userInfo', responseJson);
+                    
+                    // Get error when saving Json object to AsyncStorage
+                    //AsyncStorage.setItem('userInfo', responseJson);
 
                     this.props.navigation.navigate('Main');
                 }
@@ -88,6 +90,7 @@ export default class Login extends Component {
                 }
             }).catch((error) => {
                 console.error(error);
+                alert("Error:" + error);
             }); 
         }
         else
@@ -105,7 +108,6 @@ export default class Login extends Component {
       };
 
       _onGuestUserPress = async () => {
-        // await AsyncStorage.setItem('userToken', 'abc');
         this.props.navigation.navigate('Guest');  
       };
       

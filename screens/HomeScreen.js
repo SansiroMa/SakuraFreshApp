@@ -65,6 +65,7 @@ export default class HomeScreen extends React.Component {
       notificationTitle:null,
       notificationBody:null,
       barCodeModal:'New Item',
+      imageUrl:'http://3.bp.blogspot.com/_FQlMKJUv0Co/TP05lU-qLGI/AAAAAAAAAWE/8NwAA_HZYyA/s320/christmas%2Bcard%2Bgreen%2Bwheat%2Bfield.jpg',
     });
 
     this._onPressSendButton = this._onPressSendButton.bind(this);
@@ -74,6 +75,7 @@ export default class HomeScreen extends React.Component {
     this.handleConfirm = this.handleConfirm.bind(this);
     this.handleReport = this.handleReport.bind(this);
     this.onEventPress = this.onEventPress.bind(this)
+    this.onValueChange = this.onValueChange.bind(this);
   }
 
   componentDidMount() {
@@ -201,17 +203,34 @@ export default class HomeScreen extends React.Component {
   }
   
    // When timeline item is clicked
-  onEventPress(data){
-    // this.setState({
-    //   selected: data,
-    //   time: data.time,
-    //   title: data.title,
-    //   description: data.description,
-    //   imageUrl: data.imageUrl})
-    
+  onEventPress(){    
       this.popupDialog.show();
   }
   
+  onValueChange(barCodeModal){
+
+    var url = " ";
+
+    switch(barCodeModal)
+    {
+      case "New Item": 
+        url = "http://3.bp.blogspot.com/_FQlMKJUv0Co/TP05lU-qLGI/AAAAAAAAAWE/8NwAA_HZYyA/s320/christmas%2Bcard%2Bgreen%2Bwheat%2Bfield.jpg";
+        break;
+
+      case "Case": 
+        url = "https://cdn7.bigcommerce.com/s-r2jj2zkz7j/images/stencil/1280x1280/products/302/716/Fruits_Vegetables_Package__74794.1510403529.jpg";
+        break;
+      case "Pallet": 
+        url = "http://img.agriexpo.online/images_ag/photo-mg/170029-10532357.jpg";
+        break;
+      case "Instransit": 
+        url = "http://www.stepintohealth.com.au/wp-content/uploads/2011/12/health-benefits-of-broccoli_page1_image1.jpg";
+        break;
+      default:
+        break;
+    }
+    this.setState({ barCodeModal:barCodeModal, imageUrl: url });
+  }
   // When confirm button is clicked 
   handleConfirm()
   {
@@ -567,11 +586,24 @@ export default class HomeScreen extends React.Component {
               style={styles.welcomeImage}
             />
 
-            <Button
+  
+          <View>
+            <TouchableElement
+              activeOpacity={0.6}
+              underlayColor={'white'}
+              onPress={() => this.onEventPress()}>
+              <Image source={{uri: this.state.imageUrl}} style={styles.image}/>
+
+            </TouchableElement>
+          </View>
+
+            
+
+            {/* <Button
               icon={{name: 'check-circle', type: 'font-awesome'}}
               buttonStyle={styles.popUpButtonStyle}
               onPress={this.onEventPress}
-              title={this.state.barCodeModal} />
+              title={this.state.barCodeModal} /> */}
           </View>
 
           <PopupDialog
@@ -587,7 +619,7 @@ export default class HomeScreen extends React.Component {
                 <View style = {styles.pickerStyle}>
                   <Picker
                     selectedValue={this.state.barCodeModal}
-                    onValueChange={barCodeModal => this.setState({ barCodeModal })}
+                    onValueChange={barCodeModal => this.onValueChange(barCodeModal)}
                     style={{ width: 160 }}
                     mode="dropdown">
                     <Picker.Item label="New Item" value="New Item" />
@@ -914,7 +946,7 @@ const styles = StyleSheet.create({
   },
   clearButtonStyleHomePage:
   {
-    height: 40, 
+    height: 45, 
     width: 120, 
     backgroundColor: 
     '#ff9797', 
@@ -922,10 +954,10 @@ const styles = StyleSheet.create({
   },
   sendButtonStyleHomePage:
   {
-    height: 40, 
+    height: 45, 
     width: 120, 
     backgroundColor: 
-    'rgba(111, 202, 186, 1)', 
+    '#1bc461', 
     // alignItems: 'right',
     // position: 'absolute',
     borderRadius: 5 
@@ -934,6 +966,12 @@ const styles = StyleSheet.create({
   {
     height: 20, 
     paddingTop: 5
+  },
+
+  image:{
+    width: 50,
+    height: 50,
+    borderRadius: 25
   },
 
   popUpButtonStyle:
