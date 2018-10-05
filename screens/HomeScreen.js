@@ -46,7 +46,7 @@ const flatListData =[
 export default class HomeScreen extends React.Component {
   static navigationOptions = {
     // header: null,
-    title: 'SSCC-GTIN',
+    title: 'Home',
   };
 
   constructor(props) {
@@ -65,7 +65,7 @@ export default class HomeScreen extends React.Component {
       notificationTitle:null,
       notificationBody:null,
       barCodeModal:'New Item',
-      imageUrl:'http://3.bp.blogspot.com/_FQlMKJUv0Co/TP05lU-qLGI/AAAAAAAAAWE/8NwAA_HZYyA/s320/christmas%2Bcard%2Bgreen%2Bwheat%2Bfield.jpg',
+      imageUrl:require('../assets/images/barcodeModal/green_wheat.jpg'),
     });
 
     this._onPressSendButton = this._onPressSendButton.bind(this);
@@ -214,17 +214,20 @@ export default class HomeScreen extends React.Component {
     switch(barCodeModal)
     {
       case "New Item": 
-        url = "http://3.bp.blogspot.com/_FQlMKJUv0Co/TP05lU-qLGI/AAAAAAAAAWE/8NwAA_HZYyA/s320/christmas%2Bcard%2Bgreen%2Bwheat%2Bfield.jpg";
+        // url = "http://3.bp.blogspot.com/_FQlMKJUv0Co/TP05lU-qLGI/AAAAAAAAAWE/8NwAA_HZYyA/s320/christmas%2Bcard%2Bgreen%2Bwheat%2Bfield.jpg";
+        url = require('../assets/images/barcodeModal/green_wheat.jpg');
         break;
-
       case "Case": 
-        url = "https://cdn7.bigcommerce.com/s-r2jj2zkz7j/images/stencil/1280x1280/products/302/716/Fruits_Vegetables_Package__74794.1510403529.jpg";
+        // url = "https://cdn7.bigcommerce.com/s-r2jj2zkz7j/images/stencil/1280x1280/products/302/716/Fruits_Vegetables_Package__74794.1510403529.jpg";
+        url = require('../assets/images/barcodeModal/Fruits_Vegetables_Package.jpg');
         break;
       case "Pallet": 
-        url = "http://img.agriexpo.online/images_ag/photo-mg/170029-10532357.jpg";
+        // url = "http://img.agriexpo.online/images_ag/photo-mg/170029-10532357.jpg";
+        url = require('../assets/images/barcodeModal/Pallet.jpg');
         break;
       case "Instransit": 
-        url = "http://www.stepintohealth.com.au/wp-content/uploads/2011/12/health-benefits-of-broccoli_page1_image1.jpg";
+        // url = "http://www.stepintohealth.com.au/wp-content/uploads/2011/12/health-benefits-of-broccoli_page1_image1.jpg";
+        url = require('../assets/images/barcodeModal/broccoli.jpg');
         break;
       default:
         break;
@@ -587,15 +590,15 @@ export default class HomeScreen extends React.Component {
             />
 
   
-          <View>
-            <TouchableElement
-              activeOpacity={0.6}
-              underlayColor={'white'}
-              onPress={() => this.onEventPress()}>
-              <Image source={{uri: this.state.imageUrl}} style={styles.image}/>
-
-            </TouchableElement>
-          </View>
+            <View>
+              <TouchableElement
+                activeOpacity={0.6}
+                underlayColor={'white'}
+                onPress={() => this.onEventPress()}>
+                {/* <Image source={{uri: this.state.imageUrl}} style={styles.image}/> */}
+                <Image source={this.state.imageUrl} style={styles.image}/>
+              </TouchableElement>
+            </View>
 
             
 
