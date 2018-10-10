@@ -25,6 +25,8 @@ import PopupDialog,
       FadeAnimation
     } from 'react-native-popup-dialog';
 
+import ActionButton from 'react-native-action-button';
+
 const slideAnimation = new SlideAnimation({ slideFrom: 'bottom' });
 const scaleAnimation = new ScaleAnimation();
 const fadeAnimation = new FadeAnimation({ animationDuration: 150 });
@@ -54,28 +56,31 @@ export default class HomeScreen extends React.Component {
     super(props);
 
     this.state = ({
+      locationToken:null,
       text: '',
       deletedRowKey: null,
       isShowingText: true,
       updateFlag : true,
-      listData : flatListData,
-      mainCode: null,
+      listData : [],
+      packCode: null,
       notification: {},
       notificationToken:null,
       notificationTitle:null,
       notificationBody:null,
       barCodeModal:'New Item',
+      showingBarCodeModal:'New Item',
       imageUrl:require('../assets/images/barcodeModal/green_wheat.jpg'),
     });
 
+     // #Button Events
     this._onPressSendButton = this._onPressSendButton.bind(this);
     this._onPressClearButton = this._onPressClearButton.bind(this);
     this._deleteButtonclick = this._deleteButtonclick.bind(this);  
 
-    this.handleConfirm = this.handleConfirm.bind(this);
-    this.handleReport = this.handleReport.bind(this);
-    this.onEventPress = this.onEventPress.bind(this)
-    this.onValueChange = this.onValueChange.bind(this);
+    // #popupDialog
+    this.onIconPress = this.onIconPress.bind(this)
+    this.handleConfirmChangeModal = this.handleConfirmChangeModal.bind(this);
+    this.handleCancelChangeModal = this.handleCancelChangeModal.bind(this);    
   }
 
   componentDidMount() {
@@ -85,7 +90,8 @@ export default class HomeScreen extends React.Component {
 
     this.registerForPushNotificationsAsync()
 
-    //alert(JSON.stringify(notificationToken));
+    // get user location token
+    this._getUserToken();
     
     // Handle notifications that are received or selected while the app
     // is open. If the app was closed and then opened by tapping the
@@ -118,6 +124,7 @@ export default class HomeScreen extends React.Component {
     if (finalStatus !== 'granted') {
       return;
     }
+    
 
     // Get the token that uniquely identifies this device
     let token = await Notifications.getExpoPushTokenAsync();
@@ -149,9 +156,19 @@ export default class HomeScreen extends React.Component {
     */
   }
 
+   // Fetch the token from storage
+   _getUserToken = async () => {
+
+    const value =  await AsyncStorage.getItem('locationToken');    
+    
+    this.setState({
+      locationToken: value,
+    });
+  };
+
   _handleNotification = (notification) => {
     this.setState({notification: notification});
-    alert("notification:"+ notification);
+    alert("notification:"+ JSON.stringify(notification));
   };
 
   refreshFlatList = (deletedKey) => {
@@ -166,13 +183,14 @@ export default class HomeScreen extends React.Component {
     });
   }
 
+  // Push notification to app
   sendPushNotification(token = this.state.notificationToken, title = this.state.notificationTitle, body = this.state.notificationBody) {
     return fetch('https://exp.host/--/api/v2/push/send', {
       body: JSON.stringify({
         to: token,
         title: title,
         body: body,
-       // data: { message: `${title} - ${body}` },
+        data: { message: `${title} - ${body}` },
       }),
       headers: {
         'Content-Type': 'application/json',
@@ -181,13 +199,93 @@ export default class HomeScreen extends React.Component {
     });
   }
 
+
+  // Send barcode list to our server
+  sendBarcodeList(dataList = this.state.listData,
+                  token = this.state.locationToken,
+                  showingBarCodeModal = this.state.showingBarCodeModal,
+                  packCode = this.state.packCode) {
+
+    var body = {};
+    //body.locationToken = token;
+
+    // 1. Get Data List 
+    var valueList = [];
+
+    dataList.forEach(element => {
+      valueList.push(element.value);
+    });
+
+    token = "9a42cd67-5b9f-4003-9b06-d2719d35cf6c";
+    
+    // 2. Get Body
+    switch(showingBarCodeModal){
+      case "New Item": 
+        body = {  
+          locationToken: token,       
+          item: valueList[0]
+        };
+        break;
+      case "Case": 
+        body = {
+          locationToken: token,
+          pack: packCode,
+          items: valueList
+        };
+        break;
+      case "Pallet": 
+        body = {
+          locationToken: token,
+          pack: packCode,
+          packs: valueList
+        };
+        break;
+      case "Instransit": 
+        body = {
+          locationToken: token,
+          pack: valueList[0]
+        };
+        break;
+      default:
+        break;
+    }
+
+    fetch('http://153.149.186.12/exp/api/trace', {
+      body: JSON.stringify(body),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      method: 'POST',
+    })
+    .then((response) => response.json())
+    .then((responseJson) => {
+          //alert(JSON.stringify(responseJson))
+          console.log(JSON.stringify(responseJson));
+
+          this.setState({notificationTitle : "Message Reveived!",notificationBody :"Items have been sent to server successfully"});
+
+          if(this.state.notificationToken)
+          {
+            setTimeout(() => {  
+              var responseOfPush = this.sendPushNotification();
+              console.log(JSON.stringify(responseOfPush));
+            }, 5000);
+          }
+    })
+    .catch((error) => {
+      console.error(error);
+    }); 
+    ;
+  }
+
+  // sample for fetch request
   getMoviesFromApiAsync() {
     fetch('https://facebook.github.io/react-native/movies.json')
       .then((response) => response.json())
       .then((responseJson) => {
         
         console.log(responseJson.movies);
-        this.setState({notificationTitle : "Message Reveived!",notificationBody :"GTINs have been sent to server successfully"});
+        this.setState({notificationTitle : "Message Reveived!",notificationBody :"Items have been sent to server successfully"});
 
         if(this.state.notificationToken)
         {
@@ -203,89 +301,211 @@ export default class HomeScreen extends React.Component {
   }
   
    // When timeline item is clicked
-  onEventPress(){    
-      this.popupDialog.show();
-  }
-  
-  onValueChange(barCodeModal){
+   onActionButtonItemPress(newBarCodeModal)
+   {
+    console.log('button events - ActionButton.Item is pressed: '+ newBarCodeModal);
+    // alert(newBarCodeModal);
 
     var url = " ";
-
-    switch(barCodeModal)
+    if(this.state.showingBarCodeModal != newBarCodeModal )
     {
-      case "New Item": 
-        // url = "http://3.bp.blogspot.com/_FQlMKJUv0Co/TP05lU-qLGI/AAAAAAAAAWE/8NwAA_HZYyA/s320/christmas%2Bcard%2Bgreen%2Bwheat%2Bfield.jpg";
-        url = require('../assets/images/barcodeModal/green_wheat.jpg');
-        break;
-      case "Case": 
-        // url = "https://cdn7.bigcommerce.com/s-r2jj2zkz7j/images/stencil/1280x1280/products/302/716/Fruits_Vegetables_Package__74794.1510403529.jpg";
-        url = require('../assets/images/barcodeModal/Fruits_Vegetables_Package.jpg');
-        break;
-      case "Pallet": 
-        // url = "http://img.agriexpo.online/images_ag/photo-mg/170029-10532357.jpg";
-        url = require('../assets/images/barcodeModal/Pallet.jpg');
-        break;
-      case "Instransit": 
-        // url = "http://www.stepintohealth.com.au/wp-content/uploads/2011/12/health-benefits-of-broccoli_page1_image1.jpg";
-        url = require('../assets/images/barcodeModal/broccoli.jpg');
-        break;
-      default:
-        break;
+      switch(newBarCodeModal)
+      {
+        case "New Item": 
+          url = require('../assets/images/barcodeModal/green_wheat.jpg');
+          break;
+        case "Case": 
+          url = require('../assets/images/barcodeModal/Fruits_Vegetables_Package.jpg');
+          break;
+        case "Pallet": 
+          url = require('../assets/images/barcodeModal/Pallet.jpg');
+          break;
+        case "Instransit": 
+          url = require('../assets/images/barcodeModal/broccoli.jpg');
+          break;
+        default:
+          break;
+      }
+
+      if(this.state.listData.length >0){
+      
+        Alert.alert(
+          'Confirm',
+          'Changing the barcode modal will clear all the data, continue?',
+          [                              
+            {text: 'No', onPress: () =>
+              {
+                console.log('cancel - ChangeBarCodeModal '); 
+              } 
+            },
+    
+            {
+              text: 'Yes', onPress: () => {        
+              console.log('confirm - ChangeBarCodeModal');  
+    
+              this.setState({ 
+                listData:[],
+                showingBarCodeModal:newBarCodeModal, 
+                imageUrl: url,
+                packCode:null
+                });
+            }},
+          ],
+          { cancelable: true }
+        ); 
+      }
+      else{
+        this.setState({ 
+          showingBarCodeModal:newBarCodeModal, 
+          imageUrl: url,
+          packCode:null
+        });
+      }
     }
-    this.setState({ barCodeModal:barCodeModal, imageUrl: url });
+   }
+
+   onIconPress(){    
+    this.popupDialog.show(() => {
+      console.log('callback - will show popupDialog immediately');
+      if(this.state.barCodeModal != this.state.showingBarCodeModal){
+        this.setState({barCodeModal : this.state.showingBarCodeModal});
+      }
+    });
   }
-  // When confirm button is clicked 
-  handleConfirm()
+   
+  // When cancel button is clicked 
+  handleCancelChangeModal()
   {
-    this.popupDialog.dismiss();
+    this.popupDialog.dismiss(() => {
+      console.log('callback - handleCancelChangeModal is pressed');
+      
+    });
   }
 
-  // when Report button is clicked
-  handleReport()
+  // when confirm button is clicked
+  handleConfirmChangeModal()
   {
-    this.popupDialog.dismiss();
+    this.popupDialog.dismiss(() => {
+      console.log('callback - handleConfirmChangeModal is pressed');
+
+      var url = " ";
+      var newBarCodeModal = this.state.barCodeModal;
+
+      if(this.state.showingBarCodeModal != newBarCodeModal )
+      {
+        switch(newBarCodeModal)
+        {
+          case "New Item": 
+            url = require('../assets/images/barcodeModal/green_wheat.jpg');
+            break;
+          case "Case": 
+            url = require('../assets/images/barcodeModal/Fruits_Vegetables_Package.jpg');
+            break;
+          case "Pallet": 
+            url = require('../assets/images/barcodeModal/Pallet.jpg');
+            break;
+          case "Instransit": 
+            url = require('../assets/images/barcodeModal/broccoli.jpg');
+            break;
+          default:
+            break;
+        }
+
+        if(this.state.listData.length >0){
+        
+          Alert.alert(
+            'Confirm',
+            'Changing the barcode modal will clear all the data, continue?',
+            [                              
+              {text: 'No', onPress: () =>
+                {
+                  console.log('cancel - ChangeBarCodeModal '); 
+                } 
+              },
+      
+              {
+                text: 'Yes', onPress: () => {        
+                console.log('confirm - ChangeBarCodeModal');  
+      
+                this.setState({ 
+                  listData:[],
+                  showingBarCodeModal:newBarCodeModal, 
+                  imageUrl: url,
+                  packCode:null
+                  });
+              }},
+            ],
+            { cancelable: true }
+          ); 
+        }
+        else{
+          this.setState({ 
+            showingBarCodeModal:newBarCodeModal, 
+            imageUrl: url,
+            packCode:null
+          });
+        }
+      }
+    });
   }
+  
+
+  
 
   _onSendWithoutConfirm() {
 
     console.log('_onSendWithoutConfirm ');
-    this.getMoviesFromApiAsync();
-    
-    var listData = this.state.listData
-    listData = [];
-    this.setState({listData});
 
+    var dataList = this.state.listData
+    if(dataList.length <= 0 )
+    {
+      alert("No Item!");
+    }
+    else{
+      this.sendBarcodeList();
+      this.setState({listData:[]});
+
+    }
+    
     this._onRetainFocus();
+    
   }
 
   // Click send button
   _onPressSendButton() {
-    Alert.alert(
-      'Confirm',
-      'Are you sure you want to send ?',
-      [                              
-        {
-          text: 'No', onPress: () =>
+
+    var dataList = this.state.listData
+    if(dataList.length <= 0 )
+    {
+      alert("No Item!");
+    }
+    else{
+      Alert.alert(
+        'Confirm',
+        'Are you sure you want to send ?',
+        [                              
           {
-            console.log('CancelSend'); 
-          }  
-        },
-        {text: 'Yes', onPress: () => {        
-          console.log('ConfirmSend ');
-          this.getMoviesFromApiAsync();
-          
-          var listData = this.state.listData
-          listData = [];
-          this.setState({listData:listData, mainCode: null});
+            text: 'No', onPress: () =>
+            {
+              console.log('CancelSend'); 
+            }  
+          },
+          {text: 'Yes', onPress: () => {        
+            console.log('ConfirmSend ');
+            this.sendBarcodeList();
+            
+            this.setState({listData:[], packCode: null});
+  
+            this.setState(previousState => {
+              return { isShowingText: !previousState.isShowingText, text:'' };
+            });
+          }},
+        ],
+        { cancelable: true }
+      ); 
 
-          this.setState(previousState => {
-            return { isShowingText: !previousState.isShowingText, text:'' };
-          });
-        }},
-      ],
-      { cancelable: true }
-    ); 
-
+    }
+    
     this._onRetainFocus();
   }
 
@@ -307,7 +527,7 @@ export default class HomeScreen extends React.Component {
 
           var listData = this.state.listData
           listData = [];
-          this.setState({listData:listData, mainCode: null});
+          this.setState({listData:listData, packCode: null});
 
           this.setState(previousState => {
             return { isShowingText: !previousState.isShowingText, text:'' };
@@ -409,14 +629,8 @@ export default class HomeScreen extends React.Component {
     {
       var inputStr = InputText.replace(/\s+/g,"");
 
-      if(!this.state.mainCode)
-      {
-        this.setState({
-          mainCode: inputStr
-        })
-      }
-
-      else if(inputStr.toUpperCase() == 'CONFIRMANDSEND')
+      
+      if(inputStr.toUpperCase() == 'CONFIRMANDSEND')
       {
         this._onPressSendButton();
       }
@@ -429,6 +643,13 @@ export default class HomeScreen extends React.Component {
         var listData = this.state.listData
         listData = [];
         this.setState({listData});   
+      }else  if(this.state.showingBarCodeModal!= "New Item" && 
+                this.state.showingBarCodeModal!= "Instransit" && 
+                !this.state.packCode)
+      {
+        this.setState({
+          packCode: inputStr
+        })
       }
       else
       {
@@ -476,54 +697,15 @@ export default class HomeScreen extends React.Component {
 
   _onCreateEmptyView() 
   {
-
-    let emptyView;
-
-    if(this.state.mainCode)
-    {
-      emptyView = (
-        <View>      
-            <Text style={{fontSize: 20, alignSelf: 'center'}}>SSCC is there!</Text>
-
-            <Icon                                          
-            name='battery-half'
-            type='font-awesome'
-            size = {80}
-            color = 'rgba(111, 202, 186, 1)'
-            // onPress={()=> this._deleteButtonclick(item)} 
-            />
-        </View>
-
-      );
-
-    }
-    else
-    {
-      emptyView = (
-        <View>      
-          <Text style={{fontSize: 20, alignSelf: 'center'}}>No Data!</Text>
-
-          <Icon                                          
-          name='battery-empty'
-          type='font-awesome'
-          size = {80}
-          color = '#ff9797'
-          // onPress={()=> this._deleteButtonclick(item)} 
-          />
-       </View>
-      )
-
-    }
-
     return (
       <View>      
-        <Text style={{fontSize: 20, alignSelf: 'center'}}>{this.state.mainCode ? 'SSCC is there!' : 'No Data!'}</Text>
+        <Text style={{fontSize: 20, alignSelf: 'center'}}>{this.state.packCode? 'Please input items!' : 'No Data!'}</Text>
 
         <Icon                                          
-        name={this.state.mainCode ? 'battery-half': 'battery-empty'}
+        name={this.state.packCode? 'battery-half': 'battery-empty'}
         type='font-awesome'
         size = {80}
-        color = {this.state.mainCode ? '#97ff97': '#ff9797'}
+        color = {this.state.packCode ? '#97ff97': '#ff9797'}
         // onPress={()=> this._deleteButtonclick(item)} 
         />
     </View>
@@ -552,6 +734,9 @@ export default class HomeScreen extends React.Component {
 
   render() 
   {
+    const width = Dimensions.get('window').width;
+const height = Dimensions.get('window').height;
+
     var TouchableElement = TouchableHighlight;
 
     if (Platform.OS === 'android') 
@@ -559,27 +744,90 @@ export default class HomeScreen extends React.Component {
      TouchableElement = TouchableNativeFeedback;
     }
 
-    let listTitle;
+    let listTitleView;
 
-    if(this.state.mainCode)
+    if(this.state.showingBarCodeModal == "New Item" ||this.state.showingBarCodeModal == "Instransit" )
     {
-      listTitle = (
-          <Text style={styles.sectionHeaderMainCode}>{'#SSCC: ' + this.state.mainCode }</Text>
+      listTitleView = (
+          <Text style={styles.sectionHeader}>{ this.state.showingBarCodeModal }</Text>
       );     
+    }
+    else if(this.state.packCode){
+      listTitleView = (
+        // <Text style={styles.sectionHeaderListTitle}>{this.state.showingBarCodeModal + ' #Pack: ' + this.state.packCode }</Text>
+        <View style = {{flexDirection: 'row',backgroundColor: 'rgba(247,247,247,1.0)'}}>
+          <Text style={styles.sectionHeader}>{this.state.showingBarCodeModal + ' #Pack: '}</Text>
+          <Text style={styles.sectionHeaderListTitle}>{this.state.packCode }</Text>
+        </View>
+    );     
     }
     else
     {
-      listTitle = (
-          <Text style={styles.sectionHeader}>#GTIN + SNO</Text>
-
+      listTitleView = (
+          // <Text style={styles.sectionHeader}>{this.state.showingBarCodeModal + ' #Pack: ---'}</Text>
+          <View style = {{flexDirection: 'row',backgroundColor: 'rgba(247,247,247,1.0)'}}>
+            <Text style={styles.sectionHeader}>{this.state.showingBarCodeModal + ' #Pack: '}</Text>
+            <Text style={styles.sectionHeaderListTitle}>---</Text>
+        </View>
       );
     }
 
     return (
       <View style={styles.container}  >
 
+            <View style={styles.actionButtoncontainer}>
+
+            <View>
+              <TouchableElement
+                activeOpacity={0.6}
+                underlayColor={'white'}
+                // onPress={() => this.onIconPress()}
+                >
+                <Image source={this.state.imageUrl} style={styles.image}/>
+              </TouchableElement>
+            </View>
+            
+            {/* <View style={{ position: 'absolute', top: 0, left: 0, height: height, width: width, backgroundColor: 'black', opacity: 0.7, elevation: 1 }}> */}
+              {/* <ActionButton zIndex={9000} elevation={5}  buttonColor="rgba(231,76,60,1)" buttonText = "test" verticalOrientation = "down"> */}
+              <ActionButton 
+                buttonColor="rgba(231,76,60,1)" 
+                // buttonText = "+" 
+                verticalOrientation = "down" 
+                // renderIcon={active => active ? (<Icon name="ban" type='font-awesome' /> ) : (<Icon name="check-circle" type='font-awesome' />)}
+              >
+                <ActionButton.Item
+                  buttonColor="#9b59b6"
+                  title="New Item"
+                  onPress={() => this.onActionButtonItemPress("New Item")}>
+                   <Image source={ require('../assets/images/barcodeModal/green_wheat.jpg')} style={styles.image}/>
+                  {/* <Icon name='check-circle' type='font-awesome' /> */}
+                </ActionButton.Item>
+                <ActionButton.Item
+                  buttonColor="#3498db"
+                  title="Case"
+                  onPress={(title) => this.onActionButtonItemPress("Case")}>
+                    <Image source={require('../assets/images/barcodeModal/Fruits_Vegetables_Package.jpg')} style={styles.image}/>
+                  {/* <Icon name='check-circle' type='font-awesome' /> */}
+                </ActionButton.Item>
+                <ActionButton.Item
+                  buttonColor="#1abc9c"
+                  title="Pallet"
+                  onPress={(title) => this.onActionButtonItemPress("Pallet")}>
+                    <Image source={require('../assets/images/barcodeModal/Pallet.jpg')} style={styles.image}/>
+                  {/* <Icon name='check-circle' type='font-awesome' /> */}
+                </ActionButton.Item>
+                <ActionButton.Item
+                  buttonColor="#1abc9c"
+                  title="Instransit"
+                  onPress={(title) => this.onActionButtonItemPress("Instransit")}>
+                  <Image source={require('../assets/images/barcodeModal/broccoli.jpg')} style={styles.image}/>
+                  {/* <Icon name='check-circle' type='font-awesome' /> */}
+                </ActionButton.Item>
+              </ActionButton>
+            </View>
+
           {/* Header*/ }
-          <View style={styles.welcomeContainer}>
+          {/* <View style={styles.welcomeContainer}>
             <Image
               source={
                 __DEV__
@@ -594,20 +842,11 @@ export default class HomeScreen extends React.Component {
               <TouchableElement
                 activeOpacity={0.6}
                 underlayColor={'white'}
-                onPress={() => this.onEventPress()}>
-                {/* <Image source={{uri: this.state.imageUrl}} style={styles.image}/> */}
+                onPress={() => this.onIconPress()}>
                 <Image source={this.state.imageUrl} style={styles.image}/>
               </TouchableElement>
-            </View>
-
-            
-
-            {/* <Button
-              icon={{name: 'check-circle', type: 'font-awesome'}}
-              buttonStyle={styles.popUpButtonStyle}
-              onPress={this.onEventPress}
-              title={this.state.barCodeModal} /> */}
-          </View>
+            </View>            
+          </View> */}
 
           <PopupDialog
               dialogAnimation={slideAnimation}
@@ -622,7 +861,7 @@ export default class HomeScreen extends React.Component {
                 <View style = {styles.pickerStyle}>
                   <Picker
                     selectedValue={this.state.barCodeModal}
-                    onValueChange={barCodeModal => this.onValueChange(barCodeModal)}
+                    onValueChange={barCodeModal => this.setState({ barCodeModal:barCodeModal })}
                     style={{ width: 160 }}
                     mode="dropdown">
                     <Picker.Item label="New Item" value="New Item" />
@@ -632,24 +871,25 @@ export default class HomeScreen extends React.Component {
                   </Picker>
                 </View>
 
-                {/* <View style = {styles.buttonContainerStyle}> 
+                <View style = {styles.buttonContainerStyle}> 
                   <Button
-                      icon={{name: 'envelope', type: 'font-awesome'}}
+                      icon={{name: 'ban', type: 'font-awesome'}}
                       buttonStyle={styles.cancelButtonStylePopUp}
-                      onPress={this.handleReport}
-                      title='Report' />
+                      onPress={this.handleCancelChangeModal}
+                      title='Cancel' />
                   <Button
                       icon={{name: 'check-circle', type: 'font-awesome'}}
                       buttonStyle={styles.confirmButtonStylePopUp}
-                      onPress={this.handleConfirm}
+                      onPress={this.handleConfirmChangeModal}
                       title='Confirm' />
-                </View>   */}
+                </View>  
+
               </View>               
             </PopupDialog>
 
 
 
-          <View>
+          <View style = {{flex:1}}>
             <Text style={styles.sectionHeader}>Type a Barcode</Text>
             <TextInput
               autoCorrect={false} 
@@ -662,10 +902,11 @@ export default class HomeScreen extends React.Component {
             />
           </View>
 
-          {/* Body*/ }         
-          {/* <Text style={styles.sectionHeader}>{this.state.mainCode ? 'SSCC: ' + this.state.mainCode : '#G TIN + SNO'}</Text> */}
-          {listTitle}
-          <View style={{flex: 1, marginTop: 1,marginRight: 2,marginLeft: 2}} >
+          {/* Body*/ }  
+          <View style = {{flex:1}}>    
+            {listTitleView}
+          </View>   
+          <View style={{flex: 4, marginTop: 1,marginRight: 2,marginLeft: 2}} >
               <FlatList
                 ref = 'flatlistRef'
                 data = {this.state.listData}
@@ -707,6 +948,9 @@ export default class HomeScreen extends React.Component {
               </FlatList>
           </View>
          
+          
+          
+
           {/* Footer*/ }
           
           {/* <View>
@@ -790,6 +1034,23 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fff',
 
+  },
+  actionButtoncontainer: {
+    zIndex:9000,
+    flex: 1.5,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    //backgroundColor: '#F5FCFF',
+  },
+  welcome: {
+    fontSize: 20,
+    textAlign: 'center',
+    margin: 10,
+  },
+  actionButtonIcon: {
+    fontSize: 20,
+    height: 22,
+    color: 'white',
   },
   bodycontainer: {
     flex: 1,
@@ -897,7 +1158,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     backgroundColor: 'rgba(247,247,247,1.0)',
   },
-  sectionHeaderMainCode: {
+  sectionHeaderListTitle: {
     paddingTop: 2,
     paddingLeft: 10,
     paddingRight: 10,
@@ -939,6 +1200,7 @@ const styles = StyleSheet.create({
   },
   buttonContainerHomePage:
   {
+    flex:1,
     marginLeft: 45,
     flexDirection: 'row',
     backgroundColor:'white',
@@ -972,9 +1234,9 @@ const styles = StyleSheet.create({
   },
 
   image:{
-    width: 50,
-    height: 50,
-    borderRadius: 25
+    width: 60,
+    height: 60,
+    borderRadius: 30
   },
 
   popUpButtonStyle:
@@ -992,6 +1254,7 @@ const styles = StyleSheet.create({
     flexDirection: 'column',
     backgroundColor:'white',
     justifyContent: 'center',
+    //bottom: 10
   },
   pickerStyle:
   {
@@ -1005,6 +1268,7 @@ const styles = StyleSheet.create({
     backgroundColor:'white',
     justifyContent: 'space-around',
     alignItems: 'center',
+    bottom: 10
   },
   cancelButtonStylePopUp:
   {

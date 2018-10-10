@@ -54,7 +54,7 @@ export default class Login extends Component {
 
         if(userNameCheck & passwordCheck)
         {
-            fetch('http://153.149.186.12:9091/api/auth/login',
+            fetch('http://153.149.186.12/exp/api/auth/login',
             {
                 method: 'POST',
                 headers: 
@@ -73,11 +73,11 @@ export default class Login extends Component {
                              
                 console.log(responseJson);
         
-                //alert(JSON.stringify(responseJson));
+                alert(JSON.stringify(responseJson));
                 
                 if(responseJson.token)
                 {
-                    AsyncStorage.setItem('userToken', responseJson.token);
+                    AsyncStorage.setItem('locationToken', responseJson.token);
                     
                     // Get error when saving Json object to AsyncStorage
                     //AsyncStorage.setItem('userInfo', responseJson);
