@@ -14,6 +14,7 @@ import {
   Dimensions,
   AsyncStorage,
   Picker,
+  Animated,
 } from 'react-native';
 
 import { Permissions,WebBrowser,Notifications } from 'expo';
@@ -70,6 +71,7 @@ export default class HomeScreen extends React.Component {
       barCodeModal:'New Item',
       showingBarCodeModal:'New Item',
       imageUrl:require('../assets/images/barcodeModal/green_wheat.jpg'),
+      anim: new Animated.Value(0)
     });
 
      // #Button Events
@@ -85,7 +87,6 @@ export default class HomeScreen extends React.Component {
 
   componentDidMount() {
     //const notificationToken =   this.registerForPushNotificationsAsync();
-    
     // this.setState({notificationToken:notificationToken});
 
     this.registerForPushNotificationsAsync()
@@ -198,7 +199,6 @@ export default class HomeScreen extends React.Component {
       method: 'POST',
     });
   }
-
 
   // Send barcode list to our server
   sendBarcodeList(dataList = this.state.listData,
@@ -449,9 +449,6 @@ export default class HomeScreen extends React.Component {
     });
   }
   
-
-  
-
   _onSendWithoutConfirm() {
 
     console.log('_onSendWithoutConfirm ');
@@ -468,12 +465,10 @@ export default class HomeScreen extends React.Component {
     }
     
     this._onRetainFocus();
-    
   }
 
   // Click send button
   _onPressSendButton() {
-
     var dataList = this.state.listData
     if(dataList.length <= 0 )
     {
@@ -495,7 +490,6 @@ export default class HomeScreen extends React.Component {
             this.sendBarcodeList();
             
             this.setState({listData:[], packCode: null});
-  
             this.setState(previousState => {
               return { isShowingText: !previousState.isShowingText, text:'' };
             });
@@ -503,7 +497,6 @@ export default class HomeScreen extends React.Component {
         ],
         { cancelable: true }
       ); 
-
     }
     
     this._onRetainFocus();
@@ -552,7 +545,6 @@ export default class HomeScreen extends React.Component {
   _onChangeText() {
 
     // var inputStr = String.prototype.trim.call(this.state.text )
-
     // this.InputTextFocusRef.clear();
 
     var inputStr = this.state.text.replace(/\s+/g,"");
@@ -582,7 +574,6 @@ export default class HomeScreen extends React.Component {
         // let index = listData.indexOf(newItem);
 
         let index = listData.map(obj => obj.key).indexOf(inputStr);
-
 
         if(index >= 0) // If duplicate key
         {
@@ -629,7 +620,6 @@ export default class HomeScreen extends React.Component {
     {
       var inputStr = InputText.replace(/\s+/g,"");
 
-      
       if(inputStr.toUpperCase() == 'CONFIRMANDSEND')
       {
         this._onPressSendButton();
@@ -643,13 +633,12 @@ export default class HomeScreen extends React.Component {
         var listData = this.state.listData
         listData = [];
         this.setState({listData});   
-      }else  if(this.state.showingBarCodeModal!= "New Item" && 
-                this.state.showingBarCodeModal!= "Instransit" && 
-                !this.state.packCode)
+      }
+      else  if(this.state.showingBarCodeModal!= "New Item" && 
+               this.state.showingBarCodeModal!= "Instransit" && 
+              !this.state.packCode)
       {
-        this.setState({
-          packCode: inputStr
-        })
+        this.setState({packCode: inputStr})
       }
       else
       {
@@ -674,6 +663,8 @@ export default class HomeScreen extends React.Component {
         }
         //flatListData = [];
         this.setState({updateFlag : !this.state.updateFlag});
+
+        this._handleLishLenChange();
       }
 
       this.setState({text : ''});
@@ -690,9 +681,7 @@ export default class HomeScreen extends React.Component {
   _onRetainFocus() 
   {
     var InputTextFocusRef = this.InputTextFocusRef;
-
     InputTextFocusRef.focus();    
-    
   }
 
   _onCreateEmptyView() 
@@ -706,7 +695,6 @@ export default class HomeScreen extends React.Component {
         type='font-awesome'
         size = {80}
         color = {this.state.packCode ? '#97ff97': '#ff9797'}
-        // onPress={()=> this._deleteButtonclick(item)} 
         />
     </View>
 
@@ -723,7 +711,6 @@ export default class HomeScreen extends React.Component {
         type='font-awesome'
         size = {14}
         // color = '#ff9797'
-        // onPress={()=> this._deleteButtonclick(item)} 
         />
       )
     
@@ -732,10 +719,24 @@ export default class HomeScreen extends React.Component {
     );
   }
 
+  _handleLishLenChange = function() {
+
+    Animated.timing(this.state.anim, {toValue: 1}).start(() => this._backToOrigin());
+    // Animated.delay(400),
+    // Animated.timing(this.state.anim, {toValue: 0}).start();
+  }
+
+  _backToOrigin = function() {
+    Animated.timing(this.state.anim, {toValue: 0}).start();
+    // Animated.delay(400),
+    // Animated.timing(this.state.anim, {toValue: 0}).start();
+  }
+
+
   render() 
   {
     const width = Dimensions.get('window').width;
-const height = Dimensions.get('window').height;
+    const height = Dimensions.get('window').height;
 
     var TouchableElement = TouchableHighlight;
 
@@ -749,7 +750,7 @@ const height = Dimensions.get('window').height;
     if(this.state.showingBarCodeModal == "New Item" ||this.state.showingBarCodeModal == "Instransit" )
     {
       listTitleView = (
-          <Text style={styles.sectionHeader}>{ this.state.showingBarCodeModal }</Text>
+        <Text style={styles.sectionHeader}>{ this.state.showingBarCodeModal }</Text>
       );     
     }
     else if(this.state.packCode){
@@ -759,46 +760,74 @@ const height = Dimensions.get('window').height;
           <Text style={styles.sectionHeader}>{this.state.showingBarCodeModal + ' #Pack: '}</Text>
           <Text style={styles.sectionHeaderListTitle}>{this.state.packCode }</Text>
         </View>
-    );     
+      );     
     }
     else
     {
       listTitleView = (
-          // <Text style={styles.sectionHeader}>{this.state.showingBarCodeModal + ' #Pack: ---'}</Text>
-          <View style = {{flexDirection: 'row',backgroundColor: 'rgba(247,247,247,1.0)'}}>
-            <Text style={styles.sectionHeader}>{this.state.showingBarCodeModal + ' #Pack: '}</Text>
-            <Text style={styles.sectionHeaderListTitle}>---</Text>
+        // <Text style={styles.sectionHeader}>{this.state.showingBarCodeModal + ' #Pack: ---'}</Text>
+        <View style = {{flexDirection: 'row',backgroundColor: 'rgba(247,247,247,1.0)'}}>
+          <Text style={styles.sectionHeader}>{this.state.showingBarCodeModal + ' #Pack: '}</Text>
+          <Text style={styles.sectionHeaderListTitle}>---</Text>
         </View>
       );
     }
 
     return (
       <View style={styles.container}  >
-
             <View style={styles.actionButtoncontainer}>
+              <Text style={styles.actionButtonTextContainer}>{this.state.showingBarCodeModal}</Text>
+              {this.state.listData.length>0 ? <Text> {"+" + this.state.listData.length}</Text> : null}
 
-            <View>
-              <TouchableElement
-                activeOpacity={0.6}
-                underlayColor={'white'}
-                // onPress={() => this.onIconPress()}
-                >
-                <Image source={this.state.imageUrl} style={styles.image}/>
-              </TouchableElement>
-            </View>
-            
-            {/* <View style={{ position: 'absolute', top: 0, left: 0, height: height, width: width, backgroundColor: 'black', opacity: 0.7, elevation: 1 }}> */}
-              {/* <ActionButton zIndex={9000} elevation={5}  buttonColor="rgba(231,76,60,1)" buttonText = "test" verticalOrientation = "down"> */}
+              <Animated.View style={{
+                              bottom: this.state.anim.interpolate({
+                                inputRange: [0,1],
+                                outputRange: [0, 50]
+                              }),
+                              opacity: this.state.anim.interpolate({
+                                inputRange: [0,1],
+                                outputRange: [0, 1]
+                              }),
+                              // transform: [{
+                              //     rotateZ: this.state.anim.interpolate({
+                              //         inputRange: [0,1],
+                              //         outputRange: ['0deg', '360deg']
+                              //     })
+                              // }]
+                            }}
+                  // onPress={() => this.handleClick()}
+                  >
+                    {this.state.listData.length>0 
+                      ? 
+                      <Animated.Text 
+                      style={{
+                            fontSize: this.state.anim.interpolate({
+                                inputRange: [0,1],
+                                outputRange: [12,26]
+                            }),
+                            color:"#1abc9c",
+                            fontWeight: 'bold',
+                        }}
+                      > {"+" + this.state.listData.length}</Animated.Text> 
+                      :
+                      null
+                    }
+                  {/* <Image source={this.state.imageUrl}/> */}
+              </Animated.View>            
+
+
               <ActionButton 
                 buttonColor="rgba(231,76,60,1)" 
                 // buttonText = "+" 
                 verticalOrientation = "down" 
                 // renderIcon={active => active ? (<Icon name="ban" type='font-awesome' /> ) : (<Icon name="check-circle" type='font-awesome' />)}
+                renderIcon={() => {return(<Image source={this.state.imageUrl} style={styles.image}/>)}}
               >
                 <ActionButton.Item
                   buttonColor="#9b59b6"
                   title="New Item"
-                  onPress={() => this.onActionButtonItemPress("New Item")}>
+                  onPress={() => this.onActionButtonItemPress("New Item")}
+                  >
                    <Image source={ require('../assets/images/barcodeModal/green_wheat.jpg')} style={styles.image}/>
                   {/* <Icon name='check-circle' type='font-awesome' /> */}
                 </ActionButton.Item>
@@ -807,21 +836,18 @@ const height = Dimensions.get('window').height;
                   title="Case"
                   onPress={(title) => this.onActionButtonItemPress("Case")}>
                     <Image source={require('../assets/images/barcodeModal/Fruits_Vegetables_Package.jpg')} style={styles.image}/>
-                  {/* <Icon name='check-circle' type='font-awesome' /> */}
                 </ActionButton.Item>
                 <ActionButton.Item
                   buttonColor="#1abc9c"
                   title="Pallet"
                   onPress={(title) => this.onActionButtonItemPress("Pallet")}>
                     <Image source={require('../assets/images/barcodeModal/Pallet.jpg')} style={styles.image}/>
-                  {/* <Icon name='check-circle' type='font-awesome' /> */}
                 </ActionButton.Item>
                 <ActionButton.Item
-                  buttonColor="#1abc9c"
+                  buttonColor="#194bd6"
                   title="Instransit"
                   onPress={(title) => this.onActionButtonItemPress("Instransit")}>
                   <Image source={require('../assets/images/barcodeModal/broccoli.jpg')} style={styles.image}/>
-                  {/* <Icon name='check-circle' type='font-awesome' /> */}
                 </ActionButton.Item>
               </ActionButton>
             </View>
@@ -837,7 +863,6 @@ const height = Dimensions.get('window').height;
               style={styles.welcomeImage}
             />
 
-  
             <View>
               <TouchableElement
                 activeOpacity={0.6}
@@ -883,11 +908,8 @@ const height = Dimensions.get('window').height;
                       onPress={this.handleConfirmChangeModal}
                       title='Confirm' />
                 </View>  
-
               </View>               
-            </PopupDialog>
-
-
+          </PopupDialog>
 
           <View style = {{flex:1}}>
             <Text style={styles.sectionHeader}>Type a Barcode</Text>
@@ -903,7 +925,7 @@ const height = Dimensions.get('window').height;
           </View>
 
           {/* Body*/ }  
-          <View style = {{flex:1}}>    
+          <View>    
             {listTitleView}
           </View>   
           <View style={{flex: 4, marginTop: 1,marginRight: 2,marginLeft: 2}} >
@@ -914,43 +936,37 @@ const height = Dimensions.get('window').height;
                 getItemLayout={(data, index) => ( {length: 50, offset: (50 + 1) * index + 20, index} )}
                 ListEmptyComponent={this._onCreateEmptyView()}
                 ListFooterComponent={this._footer} 
-
                 renderItem={({item,index}) =>{
                   return(
                     <View> 
                         <View style={styles.navBar} > 
-                                <View style={styles.leftContainer}>    
-                                  <Text style={styles.flatListItem}>{index + 1}</Text>  
-                                  <Text style={styles.flatListItem}>{item.value}</Text> 
-                                </View>  
+                            <View style={styles.leftContainer}>    
+                              <Text style={styles.flatListItem}>{index + 1}</Text>  
+                              <Text style={styles.flatListItem}>{item.value}</Text> 
+                            </View>  
 
-                                <View>  
-                                  <Icon                                          
-                                      name='minus-circle'
-                                      type='font-awesome'
-                                      color = '#ff9797'
-                                      onPress={()=> this._deleteButtonclick(item)} />
-                                </View>                                                                                                               
+                            <View>  
+                              <Icon                                          
+                                  name='minus-circle'
+                                  type='font-awesome'
+                                  color = '#ff9797'
+                                  onPress={()=> this._deleteButtonclick(item)} />
+                            </View>                                                                                                               
                         </View>  
     
                         <View style={{
-                            height: 1,
-                            borderBottomWidth: StyleSheet.hairlineWidth,
-                            borderBottomColor: 'skyblue'    
-                        }}>
+                                        height: 1,
+                                        borderBottomWidth: StyleSheet.hairlineWidth,
+                                        borderBottomColor: 'skyblue'    
+                                    }}>
                         </View>
-
                     </View>  
-
                   );
                 }}
               >
               </FlatList>
           </View>
          
-          
-          
-
           {/* Footer*/ }
           
           {/* <View>
@@ -976,14 +992,12 @@ const height = Dimensions.get('window').height;
                 title='Send' />
           </View>
 
-
         {/* <View style={styles.tabBarInfoContainer}>
           <Text style={styles.tabBarInfoText}>This is a tab bar. You can edit it in:</Text>
           <View style={[styles.codeHighlightContainer, styles.navigationFilename]}>
             <MonoText style={styles.codeHighlightText}>navigation/MainTabNavigator.js</MonoText>
           </View>
         </View> */}
-
       </View>
   
     );
@@ -1039,7 +1053,7 @@ const styles = StyleSheet.create({
     zIndex:9000,
     flex: 1.5,
     justifyContent: 'center',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     //backgroundColor: '#F5FCFF',
   },
   welcome: {
@@ -1285,6 +1299,26 @@ const styles = StyleSheet.create({
     backgroundColor: 
     'rgba(111, 202, 186, 1)', 
     borderRadius: 5 
+  },
+
+  actionButtonTextContainer: {
+    // position: "absolute",
+    // paddingVertical: isAndroid ? 2 : 3,
+    paddingHorizontal: 8,
+    ...Platform.select({
+      ios: {
+        paddingVertical: 3
+      },
+      android: {
+        paddingVertical: 2,
+      },
+    }),
+    borderRadius: 3,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: "#eee",
+    backgroundColor: "white",
+    height: 40,
+    fontSize: 30,
   },
 
 });
