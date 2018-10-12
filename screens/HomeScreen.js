@@ -71,7 +71,8 @@ export default class HomeScreen extends React.Component {
       barCodeModal:'New Item',
       showingBarCodeModal:'New Item',
       imageUrl:require('../assets/images/barcodeModal/green_wheat.jpg'),
-      anim: new Animated.Value(0)
+      anim: new Animated.Value(0),
+      animHeader: new Animated.Value(1)
     });
 
      // #Button Events
@@ -361,6 +362,8 @@ export default class HomeScreen extends React.Component {
           packCode:null
         });
       }
+
+      this._handleModalChangeAnima();
     }
    }
 
@@ -540,7 +543,7 @@ export default class HomeScreen extends React.Component {
     let index = listData.indexOf(item);
     listData.splice(index, 1);
     this.setState({listData});
-
+    this._handleLishLenChange();
   }
   _onChangeText() {
 
@@ -732,6 +735,25 @@ export default class HomeScreen extends React.Component {
     // Animated.timing(this.state.anim, {toValue: 0}).start();
   }
 
+  _handleModalChangeAnima = function() {
+
+    Animated.timing(this.state.animHeader, {toValue: 0.8}).start(() => this._backToOriginModalChange_toBigSize());
+
+    // Animated.spring(this.state.animHeader, {toValue: 0.8}).start(() => this._backToOriginModalChange_toBigSize());
+    // Animated.delay(400),
+    // Animated.timing(this.state.anim, {toValue: 0}).start();
+  }
+
+  _backToOriginModalChange_toBigSize = function() {
+    Animated.timing(this.state.animHeader, {toValue: 1.5}).start(() => this._backToOriginModalChange_toNomSize());
+  }
+
+  _backToOriginModalChange_toNomSize = function() {
+    Animated.timing(this.state.animHeader, {toValue: 1}).start();
+    // Animated.delay(400),
+    // Animated.timing(this.state.anim, {toValue: 0}).start();
+  }
+
 
   render() 
   {
@@ -776,10 +798,18 @@ export default class HomeScreen extends React.Component {
     return (
       <View style={styles.container}  >
             <View style={styles.actionButtoncontainer}>
-              <Text style={styles.actionButtonTextContainer}>{this.state.showingBarCodeModal}</Text>
+              <Animated.View
+                style={{transform: [{
+                                    scale: this.state.animHeader
+                                   }]
+                      }}
+              > 
+                <Text style={styles.actionButtonTextContainer}>{this.state.showingBarCodeModal}</Text>
+              </Animated.View>
+              
               {this.state.listData.length>0 ? <Text> {"+" + this.state.listData.length}</Text> : null}
-
               <Animated.View style={{
+                position: 'absolute',
                               bottom: this.state.anim.interpolate({
                                 inputRange: [0,1],
                                 outputRange: [0, 50]
@@ -803,7 +833,7 @@ export default class HomeScreen extends React.Component {
                       style={{
                             fontSize: this.state.anim.interpolate({
                                 inputRange: [0,1],
-                                outputRange: [12,26]
+                                outputRange: [12,50]
                             }),
                             color:"#1abc9c",
                             fontWeight: 'bold',
