@@ -1,17 +1,19 @@
 import React from 'react';
-import { Platform } from 'react-native';
+import { Platform,StyleSheet} from 'react-native';
 import { createStackNavigator, createBottomTabNavigator } from 'react-navigation';
 
 import TabBarIcon from '../components/TabBarIcon';
 import HomeScreen from '../screens/HomeScreen';
-import SSCCScreen from '../screens/SSCCScreen';
 import LinksScreen from '../screens/LinksScreen';
 import SettingsScreen from '../screens/SettingsScreen';
+import CodeGenetatorItemScreen from '../screens/CodeGenetatorItemScreen';
+import PrinterScreen from '../screens/PrinterScreen';
 
-// const { navigate } = this.props.navigation;
 
 const HomeStack = createStackNavigator({
   Home: HomeScreen,
+  Second: CodeGenetatorItemScreen,
+  Printer: PrinterScreen,
 });
 
 HomeStack.navigationOptions = {
@@ -27,6 +29,8 @@ HomeStack.navigationOptions = {
     />
   ),
 };
+
+
 
 // const SSCCStack = createStackNavigator({
 //   SSCC: SSCCScreen,
@@ -82,3 +86,7 @@ export default createBottomTabNavigator({
   LinksStack,
   SettingsStack,
 });
+
+
+
+

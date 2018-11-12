@@ -73,7 +73,7 @@ export default class Login extends Component {
                              
                 console.log(responseJson);
         
-                alert(JSON.stringify(responseJson));
+                // alert(JSON.stringify(responseJson));
                 
                 if(responseJson.token)
                 {
