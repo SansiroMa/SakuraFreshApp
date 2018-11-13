@@ -64,9 +64,7 @@ static navigationOptions = ({ navigation }) => {
         titleStr = 'Pack QR Code'
     }
     return {
-    //   title: navigation.getParam('ItemParam', 'Generate QR Code'),
-    title: titleStr,
-
+             title: titleStr,
     };
   };
 
@@ -105,54 +103,9 @@ static navigationOptions = ({ navigation }) => {
         locationToken:'',
 
         responseQRCodeList:[],
-        // favColor: undefined,
-        //     items: [
-        //         {
-        //             label: 'Red',
-        //             value: 'red',
-        //         },
-        //         {
-        //             label: 'Orange',
-        //             value: 'orange',
-        //         },
-        //         {
-        //             label: 'Blue',
-        //             value: 'blue',
-        //         },
-        //     ],
-        //     favSport: undefined,
-        //     items2: [
-        //         {
-        //             label: 'Football',
-        //             value: 'football',
-        //         },
-        //         {
-        //             label: 'Baseball',
-        //             value: 'baseball',
-        //         },
-        //         {
-        //             label: 'Hockey',
-        //             value: 'hockey',
-        //         },
-        //     ],
-
     }); 
   }
 
-//   async  componentWillMount()
-//   {
-//     // this._getUserToken();
-//     const value =  await AsyncStorage.getItem('locationToken');    
-    
-//     if (value !==  null) {
-//         alert("have data"+ value);
-//       // We have data!!
-//       this.setState({
-//         locationToken: value,
-//       });
-//     }
-
-//   }
   async componentDidMount() {
 
     const value =  await AsyncStorage.getItem('locationToken');  
@@ -193,7 +146,7 @@ static navigationOptions = ({ navigation }) => {
       })
       .then((response) => response.json())
       .then((responseJson) => {
-            // alert(JSON.stringify(responseJson));
+
             console.log(JSON.stringify(responseJson));
   
             var tmpItemList = [];
@@ -203,7 +156,7 @@ static navigationOptions = ({ navigation }) => {
 
             this.setState({
                 itemList: tmpItemList,
-              });
+            });
       })
       .catch((error) => {
         console.error(error);
@@ -248,21 +201,6 @@ static navigationOptions = ({ navigation }) => {
             await this._sendQRCodeRequestForPack();
         }
 
-        // var sampleList = [];
-        // var tmpResponseQRCodeList = this.state.responseQRCodeList;
-        // if(tmpResponseQRCodeList > 0)
-        // {
-        //     tmpResponseQRCodeList.forEach(element => {
-        //         sampleList.push(element);
-        //         });
-        // }
-        // const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-
-        // this.setState({ 
-        //     sampleList:sampleList,
-        //     listData:ds.cloneWithRows(sampleList),
-        //     });
-
         this.popupDialog.show();
     }
     else
@@ -283,7 +221,6 @@ static navigationOptions = ({ navigation }) => {
             "ttddd": "282828228"
             }
         }
-    //   var totalNumber = parseInt(this.state.QRCodeNumber);
 
     fetch('http://153.149.186.12/exp/api/qrCode/item/' + selectedItemCode + '/' + totalNumber, {
       body: JSON.stringify(postBody),
@@ -296,37 +233,10 @@ static navigationOptions = ({ navigation }) => {
     })
     .then((response) => response.json())
     .then((responseJson) => {
-        //   alert(JSON.stringify(responseJson))
           console.log('ITEM: ' + JSON.stringify(responseJson));
 
           const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
-
           var sampleList = responseJson;
-          
-        // for (var i=1; i <= totalNumber; i++){
-        //     var qrCode = "qrcodeforitem" + i;
-        //     var qrTitle = "qrcodeforitem" + i;
-
-        //     var item = {qrCode,qrTitle}
-        //     sampleList.push(item);
-        // }
-
-        //   this.setState({listData : ds.cloneWithRows(responseJson)});
-
-        //   var sampleList = [
-        //     {
-        //       image:'啤酒',
-        //       title:'啤酒',
-        //     },
-        //     {
-        //       image:'面包',
-        //       title:'面包',
-        //     },
-        //     {
-        //       image:'蛋糕',
-        //       title:'蛋糕',
-        //     },
-        //   ];
 
           this.setState({
             sampleList:sampleList,
@@ -342,83 +252,60 @@ static navigationOptions = ({ navigation }) => {
 
     var totalNumber = this.state.QRCodeNumber;
 
-  //   var totalNumber = parseInt(this.state.QRCodeNumber);
+    fetch('http://153.149.186.12/exp/api/qrCode/pack/' + totalNumber, {
+        headers: {
+        'Authorization' : 'Bearer '+ this.state.locationToken,
+        },
+        method: 'GET',
+    })
+    .then((response) => response.json())
+    .then((responseJson) => {
+        //   alert(JSON.stringify(responseJson))
+            console.log('PACK: ' + JSON.stringify(responseJson));
 
-  fetch('http://153.149.186.12/exp/api/qrCode/pack/' + totalNumber, {
-    headers: {
-      'Authorization' : 'Bearer '+ this.state.locationToken,
-    },
-    method: 'GET',
-  })
-  .then((response) => response.json())
-  .then((responseJson) => {
-      //   alert(JSON.stringify(responseJson))
-        console.log('PACK: ' + JSON.stringify(responseJson));
+            const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
 
-        const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+            var sampleList = responseJson;
 
-        var sampleList = responseJson;
-
-        this.setState({
-          sampleList:sampleList,
-            listData : ds.cloneWithRows(sampleList)});
-  })
-  .catch((error) => {
-    console.error(error);
-  }); 
-
+            this.setState({
+            sampleList:sampleList,
+                listData : ds.cloneWithRows(sampleList)});
+    })
+    .catch((error) => {
+        console.error(error);
+    }); 
 }
   printPdf = async () => {
 
     try
     {
-
-        // var itemId = this.props.navigation.getParam('ItemId');
         var qrModel = this.state.QRModel;
-
         var imgHtmlStr = '';
-
         var dataList = this.state.sampleList
+
         dataList.forEach(element => {
             var elementStr = JSON.stringify(element);
 
             elementStr = elementStr.replace(/\"/g,"'");
-            // alert(elementStr);
-          var htmlcode = "https://api.qrserver.com/v1/create-qr-code/?data="+ elementStr + "&amp;size=100x100";
 
-        // alert(elementStr);
+            var htmlcode = "https://api.qrserver.com/v1/create-qr-code/?data="+ elementStr + "&amp;size=100x100";
+            var qrCode = '';
 
-        //   valueList.push(element.value);
-        // imgHtmlStr +=  "<p>"+element+"</p> <img src=\"https://api.qrserver.com/v1/create-qr-code/?data="+ element +"&amp;size=90x90\"";
-        // imgHtmlStr +=  "<p>"+element+"</p><img src=\"https://api.qrserver.com/v1/create-qr-code/?data="+ element +"&amp;size=100x100&bgcolor=800080&fgcolor=fff\"/>";
-        // imgHtmlStr +=  "<p>"+element.code+"</p><img src=\"https://api.qrserver.com/v1/create-qr-code/?data="+ elementStr +"&amp;size=100x100\"/>";
-        var qrCode = '';
-        if(qrModel == 'ITEM'){
-            qrCode = element.code;
-        }
-        else{
-            qrCode = elementStr;
-        }
-        // qrCode = element.code;
-        // if(itemId == '0')
-        // {
-        //     qrCode = element.code;
-        // }
-        // else{
-        //     qrCode = elementStr;
-        // }
-        imgHtmlStr +=  "<p>"+qrCode+"</p><img src=\""+ htmlcode +"\"/>";
+            if(qrModel == 'ITEM')
+            {
+                qrCode = element.code;
+            }
+            else
+            {
+                qrCode = elementStr;
+            }
+            imgHtmlStr +=  "<p>"+qrCode+"</p><img src=\""+ htmlcode +"\"/>";
         });
     
-        // alert(imgHtmlStr);
         var htmlStr = '<style>html, body { width: 5cm; height: 5cm; }</style>' + imgHtmlStr;
         const options = {
-        //   uri: 'http://gahp.net/wp-content/uploads/2017/09/sample.pdf',
-        // uri : 'https://api.qrserver.com/v1/create-qr-code/?data=HelloWorld&amp;size=100x100',
-        // html : '<style>html, body { width: 5cm; height: 5cm; }</style><h3>TestforQRCod</h3> <img  src="https://api.qrserver.com/v1/create-qr-code/?data=TestforQRCode&amp;size=100x100" alt="" width="50"  height="50" /><br/> <h3>HelloWorld</h3><img src="https://api.qrserver.com/v1/create-qr-code/?data=HelloWorld&amp;size=100x100"  alt="" width="50" height="50" />',
         html : htmlStr,
         //orientation: Print.Orientation.landscape,
-        
         };
         const returnValue  = await Print.printAsync(options);
         console.log("Returned value for Print : " + returnValue);
@@ -443,7 +330,7 @@ static navigationOptions = ({ navigation }) => {
     
     var qrModel = this.state.QRModel;
     let codeView;
-    
+
     if(qrModel == 'ITEM')
     {
       codeView = (<Text>{rowData.code}</Text>);
@@ -461,45 +348,11 @@ static navigationOptions = ({ navigation }) => {
             size={200}
             bgColor='purple'
             fgColor='white'/>
-
-            {/* <View style={{
-                            height: 1,
-                            borderBottomWidth: StyleSheet.hairlineWidth,
-                            borderBottomColor: 'skyblue'    
-                        }}>
-            </View> */}
-
         </View>
       )
   }
 
   render() {
-
-    // var  codeListTitleView = [];
-
-    // var dataList = this.state.listData
-    // dataList.forEach(element => {
-
-    //     codeListTitleView.push(
-    //         <View style={styles.view} key={i} >
-    //         <ProductTile onPressAction={this._pdpPage} prod={prod} index={i} />
-    //         <ProductTile onPressAction={this._pdpPage} prod={prod2} index={i + 1} />
-    //         </View>
-    //     );
-
-    // });
-
-    // let printButtonView;
-    // if(this.state.sampleList.length >0)
-    // {
-    //     printButtonView = (                
-    //         <Button
-    //         icon={{name: 'print', type: 'font-awesome'}}
-    //         buttonStyle={styles.sendButtonStyle}
-    //         onPress={this.printPdf}
-    //         title='Print' />
-    //     )
-    // }
     
     var itemId = this.props.navigation.getParam('ItemId');
 
@@ -577,94 +430,8 @@ static navigationOptions = ({ navigation }) => {
                 onPress={this._genetateQRCodes}
                 title='Generate' />
         </View>  
-            {/* <View style={styles.pickerContainer}>
-                <Text>Name?</Text>
-                <TextInput
-                    ref={(el) => {
-                        this.inputRefs.name = el;
-                    }}
-                    returnKeyType="next"
-                    enablesReturnKeyAutomatically
-                    onSubmitEditing={() => {
-                        this.inputRefs.picker.togglePicker();
-                    }}
-                    style={pickerSelectStyles.inputIOS}
-                    blurOnSubmit={false}
-                />
-
-                <View style={{ paddingVertical: 5 }} />
-
-                <Text>What&rsquo;s your favorite color?</Text>
-                <RNPickerSelect
-                    placeholder={{
-                        label: 'Select a color...',
-                        value: null,
-                    }}
-                    items={this.state.items}
-                    onValueChange={(value) => {
-                        this.setState({
-                            favColor: value,
-                        });
-                    }}
-                    onUpArrow={() => {
-                        this.inputRefs.name.focus();
-                    }}
-                    onDownArrow={() => {
-                        this.inputRefs.picker2.togglePicker();
-                    }}
-                    style={{ ...pickerSelectStyles }}
-                    value={this.state.favColor}
-                    ref={(el) => {
-                        this.inputRefs.picker = el;
-                    }}
-                />
-
-                <View style={{ paddingVertical: 5 }} />
-
-                <Text>What&rsquo;s your favorite sport?</Text>
-                <RNPickerSelect
-                    placeholder={{
-                        label: 'Select a sport...',
-                        value: null,
-                    }}
-                    items={this.state.items2}
-                    onValueChange={(value) => {
-                        this.setState({
-                            favSport: value,
-                        });
-                    }}
-                    onUpArrow={() => {
-                        this.inputRefs.picker.togglePicker();
-                    }}
-                    onDownArrow={() => {
-                        this.inputRefs.company.focus();
-                    }}
-                    style={{ ...pickerSelectStyles }}
-                    value={this.state.favSport}
-                    ref={(el) => {
-                        this.inputRefs.picker2 = el;
-                    }}
-                />
-
-                <View style={{ paddingVertical: 5 }} />
-
-                <Text>Company?</Text>
-                <TextInput
-                    ref={(el) => {
-                        this.inputRefs.company = el;
-                    }}
-                    returnKeyType="go"
-                    enablesReturnKeyAutomatically
-                    style={pickerSelectStyles.inputIOS}
-                    onSubmitEditing={() => {
-                        Alert.alert('Success', 'Form submitted', [{ text: 'Okay', onPress: null }]);
-                    }}
-                />
-            </View> */}
-           
                 <PopupDialog
                     dialogAnimation={slideAnimation}
-                    //   dialogTitle={<DialogTitle title={this.state.title} />}
                     dialogTitle={<DialogTitle title='Preview QR Codes'/>}
                     ref={(popupDialog) => { this.popupDialog = popupDialog; }}
                     //   dialogStyle={{marginTop:-200}}
@@ -691,12 +458,7 @@ static navigationOptions = ({ navigation }) => {
                             <DialogButton text="PRINT" align="center" onPress={this.printPdf}/>
                         </View>
                     </TouchableHighlight>
-                    {/* <Button
-                        icon={{name: 'print', type: 'font-awesome'}}
-                        buttonStyle={styles.sendButtonStyle}
-                        onPress={this.printPdf}
-                        title='Print' />     */}
-
+   
                     <View style = {styles.listViewStyle}> 
                         <ListView
                             enableEmptySections={true}
@@ -706,7 +468,6 @@ static navigationOptions = ({ navigation }) => {
                         />
                     </View> 
                 </PopupDialog>
-
         </View>
     );
   }
