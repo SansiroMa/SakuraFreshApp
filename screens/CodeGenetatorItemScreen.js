@@ -44,11 +44,32 @@ const fadeAnimation = new FadeAnimation({ animationDuration: 150 });
 
 export default class CodeGenetatorItemScreen extends Component
 {
-  static navigationOptions =
-  {
-     title: 'QR Code for Item',
+//   static navigationOptions =
+//   {
+//      title: 'QR Code for Item',
+//   };
+static navigationOptions = ({ navigation }) => {
+
+    var itemId_tmp = navigation.getParam('ItemId');
+
+    var titleStr = '';
+    // alert(itemId_tmp);
+
+    if(itemId_tmp== '0')
+    {
+        titleStr = 'Item QR Code'
+    }
+    else
+    {
+        titleStr = 'Pack QR Code'
+    }
+    return {
+    //   title: navigation.getParam('ItemParam', 'Generate QR Code'),
+    title: titleStr,
+
+    };
   };
- 
+
   
   constructor(props) {
 
@@ -61,10 +82,21 @@ export default class CodeGenetatorItemScreen extends Component
 
     var sampleList = [];
 
+    var itemId = this.props.navigation.getParam('ItemId');
+
+    var qrmodetype = '';
+    if(itemId == '0'){
+        qrmodetype = 'ITEM';
+    }
+    else{
+        qrmodetype = 'PACK';
+    }
+
     this.state = ({
         text: 'QR Code',
         sampleList:sampleList,
         listData :  ds.cloneWithRows(sampleList),
+        QRModel :qrmodetype,
         QRCodeNumber: '',
         QRCodeNumberError: null,
 
@@ -201,10 +233,20 @@ export default class CodeGenetatorItemScreen extends Component
     {
         QRCodeNumberCheck = true;
 
-
         var totalNumber = parseInt(this.state.QRCodeNumber);
 
-        await this._sendQRCodeRequest();
+        // var itemId = this.props.navigation.getParam('ItemId');
+        var qrModel = this.state.QRModel;
+
+        // alert(qrModel);
+        if(qrModel == 'ITEM')
+        {
+            await this._sendQRCodeRequestForItem();
+        }
+        else if(qrModel == 'PACK')
+        {
+            await this._sendQRCodeRequestForPack();
+        }
 
         // var sampleList = [];
         // var tmpResponseQRCodeList = this.state.responseQRCodeList;
@@ -229,7 +271,8 @@ export default class CodeGenetatorItemScreen extends Component
     }
   }
 
-  _sendQRCodeRequest=  () => {
+  _sendQRCodeRequestForItem=  () => {
+
       var selectedItemCode = this.state.selectedItem;
       var totalNumber = this.state.QRCodeNumber;
 
@@ -254,7 +297,7 @@ export default class CodeGenetatorItemScreen extends Component
     .then((response) => response.json())
     .then((responseJson) => {
         //   alert(JSON.stringify(responseJson))
-          console.log(JSON.stringify(responseJson));
+          console.log('ITEM: ' + JSON.stringify(responseJson));
 
           const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
 
@@ -294,10 +337,45 @@ export default class CodeGenetatorItemScreen extends Component
     }); 
 
   }
+
+  _sendQRCodeRequestForPack=  () => {
+
+    var totalNumber = this.state.QRCodeNumber;
+
+  //   var totalNumber = parseInt(this.state.QRCodeNumber);
+
+  fetch('http://153.149.186.12/exp/api/qrCode/pack/' + totalNumber, {
+    headers: {
+      'Authorization' : 'Bearer '+ this.state.locationToken,
+    },
+    method: 'GET',
+  })
+  .then((response) => response.json())
+  .then((responseJson) => {
+      //   alert(JSON.stringify(responseJson))
+        console.log('PACK: ' + JSON.stringify(responseJson));
+
+        const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+
+        var sampleList = responseJson;
+
+        this.setState({
+          sampleList:sampleList,
+            listData : ds.cloneWithRows(sampleList)});
+  })
+  .catch((error) => {
+    console.error(error);
+  }); 
+
+}
   printPdf = async () => {
 
     try
     {
+
+        // var itemId = this.props.navigation.getParam('ItemId');
+        var qrModel = this.state.QRModel;
+
         var imgHtmlStr = '';
 
         var dataList = this.state.sampleList
@@ -314,7 +392,22 @@ export default class CodeGenetatorItemScreen extends Component
         // imgHtmlStr +=  "<p>"+element+"</p> <img src=\"https://api.qrserver.com/v1/create-qr-code/?data="+ element +"&amp;size=90x90\"";
         // imgHtmlStr +=  "<p>"+element+"</p><img src=\"https://api.qrserver.com/v1/create-qr-code/?data="+ element +"&amp;size=100x100&bgcolor=800080&fgcolor=fff\"/>";
         // imgHtmlStr +=  "<p>"+element.code+"</p><img src=\"https://api.qrserver.com/v1/create-qr-code/?data="+ elementStr +"&amp;size=100x100\"/>";
-        imgHtmlStr +=  "<p>"+element.code+"</p><img src=\""+ htmlcode +"\"/>";
+        var qrCode = '';
+        if(qrModel == 'ITEM'){
+            qrCode = element.code;
+        }
+        else{
+            qrCode = elementStr;
+        }
+        // qrCode = element.code;
+        // if(itemId == '0')
+        // {
+        //     qrCode = element.code;
+        // }
+        // else{
+        //     qrCode = elementStr;
+        // }
+        imgHtmlStr +=  "<p>"+qrCode+"</p><img src=\""+ htmlcode +"\"/>";
         });
     
         // alert(imgHtmlStr);
@@ -347,9 +440,22 @@ export default class CodeGenetatorItemScreen extends Component
   }
 
   _renderRow(rowData){
+    
+    var qrModel = this.state.QRModel;
+    let codeView;
+    
+    if(qrModel == 'ITEM')
+    {
+      codeView = (<Text>{rowData.code}</Text>);
+    }
+    else
+    {
+        codeView = (<Text>{rowData}</Text>);
+    }
     return(
         <View style={styles.codeListContainer}>
-            <Text>{rowData.code}</Text>
+            {codeView}
+            {/* <Text>{rowData.code}</Text> */}
             <QRCode
             value={JSON.stringify(rowData)}
             size={200}
@@ -395,11 +501,17 @@ export default class CodeGenetatorItemScreen extends Component
     //     )
     // }
     
+    var itemId = this.props.navigation.getParam('ItemId');
 
-    return (
-        <View style={styles.container}>
+    let selectPickerView;
+    // If itemId== '0' (Item QR Code), then the show the selectPicker
+    // Else hide the selectPicker
+    if(itemId== '0')
+    {
+        selectPickerView = (
             <View>
                 <FormLabel>Select an Item?</FormLabel>
+
                 <View style = {styles.pickerContainer}>
                     <RNPickerSelect
                             placeholder={{
@@ -417,7 +529,7 @@ export default class CodeGenetatorItemScreen extends Component
                                 this.input.focus();
                             }}
                             onDownArrow={() => {
-                                 this.input.focus();
+                                    this.input.focus();
                             }}
                             style={{ ...pickerSelectStyles }}
                             value={this.state.favSport}
@@ -426,39 +538,45 @@ export default class CodeGenetatorItemScreen extends Component
                             }}
                         />
                 </View>
-
                 <View style={{ paddingVertical: 5 }} />
-
-                <FormLabel>How Many QR Codes You Need?</FormLabel>
-                <View>
-                    <TouchableWithoutFeedback style={{flex: 1}} onPress={Keyboard.dismiss} accessible={false}>
-                        <FormInput 
-                            inputStyle ={{paddingLeft: (Platform.OS) == 'ios' ? 0 : 5}}
-                            keyboardType='number-pad'
-                            onChangeText={(QRCodeNumber) => this.setState({ QRCodeNumber : QRCodeNumber, QRCodeNumberError:null })}
-                            ref={input => this.input = input}
-                            underlineColorAndroid="#808080"
-                            placeholder={'Input a Number'}
-                            shake={this.state.QRCodeNumberError}
-                            maxLength={2}
-                            clearButtonMode="always"
-                            returnKeyType="go"
-                            onSubmitEditing={() => {
-                                Alert.alert('Success', 'Form submitted', [{ text: 'Okay', onPress: null }]);
-                            }}
-                        />
-                    </TouchableWithoutFeedback>
-                </View>
-                <FormValidationMessage>{this.state.QRCodeNumberError ? "QR Code Number is required": null}</FormValidationMessage>
             </View>
+          );  
+    }
 
+    return (
+        <View style={styles.container}>
+           
+           {selectPickerView}
 
+            <View>
+                <FormLabel>How Many QR Codes You Need?</FormLabel>
+                <TouchableWithoutFeedback style={{flex: 1}} onPress={Keyboard.dismiss} accessible={false}>
+                    <FormInput 
+                        inputStyle ={{paddingLeft: (Platform.OS) == 'ios' ? 0 : 5}}
+                        keyboardType='number-pad'
+                        onChangeText={(QRCodeNumber) => this.setState({ QRCodeNumber : QRCodeNumber, QRCodeNumberError:null })}
+                        ref={input => this.input = input}
+                        underlineColorAndroid="#808080"
+                        placeholder={'Input a Number'}
+                        shake={this.state.QRCodeNumberError}
+                        maxLength={2}
+                        clearButtonMode="always"
+                        returnKeyType="go"
+                        onSubmitEditing={() => {
+                            Alert.alert('Success', 'Form submitted', [{ text: 'Okay', onPress: null }]);
+                        }}
+                    />
+                </TouchableWithoutFeedback>
+                <FormValidationMessage>{this.state.QRCodeNumberError ? "QR Code Number is required": null}</FormValidationMessage>
+        </View>
+                
+        <View style = {styles.buttonViewStyle}>                
             <Button
                 icon={{name: 'qrcode', type: 'font-awesome'}}
                 buttonStyle={styles.sendButtonStyle}
                 onPress={this._genetateQRCodes}
                 title='Generate' />
-
+        </View>  
             {/* <View style={styles.pickerContainer}>
                 <Text>Name?</Text>
                 <TextInput
@@ -583,7 +701,8 @@ export default class CodeGenetatorItemScreen extends Component
                         <ListView
                             enableEmptySections={true}
                             dataSource={this.state.listData}
-                            renderRow={this._renderRow}
+                            // renderRow={this._renderRow}
+                            renderRow={data => this._renderRow(data)}
                         />
                     </View> 
                 </PopupDialog>
@@ -595,10 +714,15 @@ export default class CodeGenetatorItemScreen extends Component
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,
+        // flex: 1,
         backgroundColor: 'white',
-        alignItems: 'center',
-        justifyContent: 'center'
+        // alignItems: 'center',
+        justifyContent: 'center',
+        flex: 1,
+        flexDirection: 'column',
+        // alignItems: 'flex-start',
+        // justifyContent: 'flex-start',
+        // paddingLeft: 10
     },
 
     codeListContainer: {
@@ -622,7 +746,8 @@ const styles = StyleSheet.create({
         width: 120, 
         backgroundColor: 
         '#1bc461', 
-        borderRadius: 5 
+        borderRadius: 5,
+        alignItems: 'flex-end', 
     },
 
     listViewStyle: 
@@ -639,13 +764,18 @@ const styles = StyleSheet.create({
 
     pickerContainer: {
         // paddingTop: 30,
+        // paddingLeft: 30,
         backgroundColor: '#fff',
+        width: '100%',
         // justifyContent: 'center',
         paddingHorizontal: 20,
-        // alignItems: 'center',
+        alignItems: 'flex-start',
         // justifyContent: 'flex-end',
         // flex:0.6
     },
+    buttonViewStyle:{
+        alignItems: 'flex-end',
+    }
 
 });
 
@@ -653,8 +783,10 @@ const pickerSelectStyles = StyleSheet.create({
     inputIOS: {
         fontSize: 16,
         paddingTop: 13,
+        // paddingLeft: 100,
         // width: deviceWidth,
         // paddingHorizontal: 10,
+        // width: '100%',
         paddingBottom: 12,
         borderWidth: 1,
         borderColor: 'gray',

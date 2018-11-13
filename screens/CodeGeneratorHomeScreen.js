@@ -43,10 +43,16 @@ export default class GeneratorTab extends Component {
       );
     }
  
-    OpenSecondActivity (rowData)
+    OpenSecondActivity (rowData,rowID)
     {
       
-       this.props.navigation.navigate('Second', { ListViewClickItemHolder: rowData });
+      var item_name = '';
+
+      // alert("rowData: " + rowData + "rowID: " + rowID);
+
+      // if(rowData.in)
+
+       this.props.navigation.navigate('Second', { ItemParam: rowData, ItemId:rowID });
       //  this.props.navigation.navigate('Auth');
       //  this.props.navigation.navigate('Auth');
        
@@ -70,7 +76,7 @@ export default class GeneratorTab extends Component {
             renderSeparator= {this.ListViewItemSeparatorLine}
   
             renderRow={
-                        (rowData) => <Text style={styles.rowViewContainer} onPress={this.OpenSecondActivity.bind(this, rowData)}>{rowData}</Text>
+                        (rowData, sectionID, rowID, highlightRow) => <Text style={styles.rowViewContainer} onPress={this.OpenSecondActivity.bind(this, rowData,rowID)}>{rowData}</Text>
                       }
   
           />

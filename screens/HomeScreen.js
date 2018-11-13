@@ -57,7 +57,8 @@ export default class HomeScreen extends React.Component {
             ),
           });
           return (
-            <TouchableOpacity
+            <TouchableOpacity 
+              key={route.title}
               style={styles.tabItem}
               onPress={() => this.setState({ index: i })}>
               <Animated.Text style={{ color }}>{route.title}</Animated.Text>
