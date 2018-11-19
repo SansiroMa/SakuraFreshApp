@@ -8,7 +8,10 @@ import {
 
 import { TabView, SceneMap } from 'react-native-tab-view';
 import InputTab from './InputScreen';
+import QRScanScreen from './QRScanScreen';
+
 import GeneratorTab from './CodeGeneratorHomeScreen';
+import { Constants } from 'expo';
 
 // const FirstRoute = () => (
 //   <View style={[styles.container, { backgroundColor: '#ff4081' }]} />
@@ -79,7 +82,7 @@ export default class HomeScreen extends React.Component {
   _renderSceneSwitch = ({ route }) => {
     switch (route.key) {
       case 'input':
-        return <InputTab />;
+        return <QRScanScreen />;
       case 'genetator':
         return <GeneratorTab navigation = {this.props.navigation}/>;
       default:
@@ -107,6 +110,7 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row',
+    // height : Constants.statusBarHeight * 2,
     //paddingTop: Constants.statusBarHeight,
   },
   tabItem: {

@@ -11,7 +11,8 @@ import {StyleSheet,
     ScrollView,
     TouchableHighlight,
     Alert,
-    AsyncStorage
+    AsyncStorage,
+    Image
 } from 'react-native';
 import QRCode from 'react-native-qrcode';
 import { Button,
@@ -250,31 +251,32 @@ static navigationOptions = ({ navigation }) => {
 
   _sendQRCodeRequestForPack=  () => {
 
-    var totalNumber = this.state.QRCodeNumber;
+        var totalNumber = this.state.QRCodeNumber;
 
-    fetch('http://153.149.186.12/exp/api/qrCode/pack/' + totalNumber, {
-        headers: {
-        'Authorization' : 'Bearer '+ this.state.locationToken,
-        },
-        method: 'GET',
-    })
-    .then((response) => response.json())
-    .then((responseJson) => {
-        //   alert(JSON.stringify(responseJson))
-            console.log('PACK: ' + JSON.stringify(responseJson));
+        fetch('http://153.149.186.12/exp/api/qrCode/pack/' + totalNumber, {
+            headers: {
+            'Authorization' : 'Bearer '+ this.state.locationToken,
+            },
+            method: 'GET',
+        })
+        .then((response) => response.json())
+        .then((responseJson) => {
+            //   alert(JSON.stringify(responseJson))
+                console.log('PACK: ' + JSON.stringify(responseJson));
 
-            const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+                const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
 
-            var sampleList = responseJson;
+                var sampleList = responseJson;
 
-            this.setState({
-            sampleList:sampleList,
-                listData : ds.cloneWithRows(sampleList)});
-    })
-    .catch((error) => {
-        console.error(error);
-    }); 
-}
+                this.setState({
+                sampleList:sampleList,
+                    listData : ds.cloneWithRows(sampleList)});
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+    }
+
   printPdf = async () => {
 
     try
@@ -286,20 +288,20 @@ static navigationOptions = ({ navigation }) => {
         dataList.forEach(element => {
             var elementStr = JSON.stringify(element);
 
-            elementStr = elementStr.replace(/\"/g,"'");
+            // elementStr = elementStr.replace(/\"/g,"'");
 
-            var htmlcode = "https://api.qrserver.com/v1/create-qr-code/?data="+ elementStr + "&amp;size=100x100";
-            var qrCode = '';
+            // var htmlcode = "https://api.qrserver.com/v1/create-qr-code/?data="+ elementStr + "&amp;size=100x100";
+            var qrCodeStr = '';
 
             if(qrModel == 'ITEM')
             {
-                qrCode = element.code;
+                qrCodeStr = element.code;
             }
             else
             {
-                qrCode = elementStr;
+                qrCodeStr = elementStr;
             }
-            imgHtmlStr +=  "<p>"+qrCode+"</p><img src=\""+ htmlcode +"\"/>";
+            imgHtmlStr +=  "<p>"+qrCodeStr+"</p><img src=\""+ element.qrcode +"\"/>";
         });
     
         var htmlStr = '<style>html, body { width: 5cm; height: 5cm; }</style>' + imgHtmlStr;
@@ -343,11 +345,12 @@ static navigationOptions = ({ navigation }) => {
         <View style={styles.codeListContainer}>
             {codeView}
             {/* <Text>{rowData.code}</Text> */}
-            <QRCode
+            <Image source={{uri:rowData.qrcode}}  style={styles.image} />
+            {/* <QRCode
             value={JSON.stringify(rowData)}
             size={200}
             bgColor='purple'
-            fgColor='white'/>
+            fgColor='white'/> */}
         </View>
       )
   }
@@ -385,7 +388,7 @@ static navigationOptions = ({ navigation }) => {
                                     this.input.focus();
                             }}
                             style={{ ...pickerSelectStyles }}
-                            value={this.state.favSport}
+                            value={this.state.selectedItem}
                             ref={(el) => {
                                 this.inputRefs.picker = el;
                             }}
@@ -421,53 +424,53 @@ static navigationOptions = ({ navigation }) => {
                     />
                 </TouchableWithoutFeedback>
                 <FormValidationMessage>{this.state.QRCodeNumberError ? "QR Code Number is required": null}</FormValidationMessage>
-        </View>
+            </View>
                 
-        <View style = {styles.buttonViewStyle}>                
-            <Button
-                icon={{name: 'qrcode', type: 'font-awesome'}}
-                buttonStyle={styles.sendButtonStyle}
-                onPress={this._genetateQRCodes}
-                title='Generate' />
-        </View>  
-                <PopupDialog
-                    dialogAnimation={slideAnimation}
-                    dialogTitle={<DialogTitle title='Preview QR Codes'/>}
-                    ref={(popupDialog) => { this.popupDialog = popupDialog; }}
-                    //   dialogStyle={{marginTop:-200}}
-                    height ={500}
-                    // actions={[
-                    //     <Text>
-                    //       <ScrollView>
-                    //         <DialogButton
-                    //           text="ACCEPT"
-                    //           onPress={() => {}}
-                    //           key="button-1"
-                    //         />,
-                    //       </ScrollView>
-                    //     </Text>
-                    //   ]}              
-                >
-                 
-                    <TouchableHighlight onPress={this.printPdf}  underlayColor="white">
-                        <View style={styles.printerContainerStyle} >
-                            <Icon
-                                name='print'
-                                type='font-awesome'
-                                color='#00aced' />
-                            <DialogButton text="PRINT" align="center" onPress={this.printPdf}/>
-                        </View>
-                    </TouchableHighlight>
-   
-                    <View style = {styles.listViewStyle}> 
-                        <ListView
-                            enableEmptySections={true}
-                            dataSource={this.state.listData}
-                            // renderRow={this._renderRow}
-                            renderRow={data => this._renderRow(data)}
-                        />
-                    </View> 
-                </PopupDialog>
+            <View style = {styles.buttonViewStyle}>                
+                <Button
+                    icon={{name: 'qrcode', type: 'font-awesome'}}
+                    buttonStyle={styles.sendButtonStyle}
+                    onPress={this._genetateQRCodes}
+                    title='Generate' />
+            </View>  
+            <PopupDialog
+                dialogAnimation={slideAnimation}
+                dialogTitle={<DialogTitle title='Preview QR Codes'/>}
+                ref={(popupDialog) => { this.popupDialog = popupDialog; }}
+                //   dialogStyle={{marginTop:-200}}
+                height ={500}
+                // actions={[
+                //     <Text>
+                //       <ScrollView>
+                //         <DialogButton
+                //           text="ACCEPT"
+                //           onPress={() => {}}
+                //           key="button-1"
+                //         />,
+                //       </ScrollView>
+                //     </Text>
+                //   ]}              
+            >
+                
+                <TouchableHighlight onPress={this.printPdf}  underlayColor="white">
+                    <View style={styles.printerContainerStyle} >
+                        <Icon
+                            name='print'
+                            type='font-awesome'
+                            color='#00aced' />
+                        <DialogButton text="PRINT" align="center" onPress={this.printPdf}/>
+                    </View>
+                </TouchableHighlight>
+
+                <View style = {styles.listViewStyle}> 
+                    <ListView
+                        enableEmptySections={true}
+                        dataSource={this.state.listData}
+                        // renderRow={this._renderRow}
+                        renderRow={data => this._renderRow(data)}
+                    />
+                </View> 
+            </PopupDialog>
         </View>
     );
   }
@@ -536,7 +539,12 @@ const styles = StyleSheet.create({
     },
     buttonViewStyle:{
         alignItems: 'flex-end',
-    }
+    },
+    image:{
+        width: 150,
+        height: 150,
+        borderRadius: 25
+      },
 
 });
 
