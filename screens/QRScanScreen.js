@@ -135,66 +135,73 @@ export default class QRScanScreen extends React.Component {
       hasCameraPermission: status === 'granted',
     });
   };
-  _handleBarCodeRead = data => {
-
-    
-    // this.popupDialog.dismiss(() => {
-    //   console.log('callback - handleCancelChangeModal is pressed');
-      
-    // });
+  _handleBarCodeRead = QRObj => {
 
     // Alert.alert(
     //   'Scan successful!',
-    //   JSON.stringify(data.data)
+    //   // JSON.stringify(QRObj.data)
+    //   QRObj.data
     // );
 
-    var elementStr = JSON.stringify(data.data);
-
+    var elementStr = QRObj.data;
+    var obj = JSON.parse(elementStr);
 
     if(this.state.buttonGroupIndex == 0)
     {
-      // alert('----here----')
       const tmpListData = this.state.listData;
+  
+      // Check if duplicate
+      let index = tmpListData.map(obj => obj.code).indexOf(obj.code);
 
-      if(elementStr.includes("'"))
+      if(index < 0) // Not duplicate
       {
-        var elementStr = elementStr.replace(/"/g, '');
-        var elementStr = elementStr.replace(/'/g, '"');
-        var elementStr = elementStr.replace(/\s/g, '');
-        var obj = JSON.parse(elementStr);
+        tmpListData.push(obj);
+
+        this.setState({
+          listData : tmpListData,
+          dataSource: this.ds.cloneWithRows(tmpListData)
+        });
+      }
+
+      // if(elementStr.includes("'"))
+      // {
+      //   var elementStr = elementStr.replace(/"/g, '');
+      //   var elementStr = elementStr.replace(/'/g, '"');
+      //   var elementStr = elementStr.replace(/\s/g, '');
+      //   var obj = JSON.parse(elementStr);
   
-        // Check if duplicate
-        let index = tmpListData.map(obj => obj.code).indexOf(obj.code);
+      //   // Check if duplicate
+      //   let index = tmpListData.map(obj => obj.code).indexOf(obj.code);
   
-        if(index < 0)
-        {
-          tmpListData.push(obj);
+      //   if(index < 0)
+      //   {
+      //     tmpListData.push(obj);
   
-          // const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+      //     // const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
     
-          this.setState({
-            listData : tmpListData,
-            dataSource: this.ds.cloneWithRows(tmpListData)
-          });
-        }
-      }
-      else{
+      //     this.setState({
+      //       listData : tmpListData,
+      //       dataSource: this.ds.cloneWithRows(tmpListData)
+      //     });
+      //   }
+      // }
+      // else{
   
-        // Check if duplicate
-        let index = tmpListData.indexOf(data.data);
+      //   // Check if duplicate
+      //   let index = tmpListData.indexOf(data.data);
   
-        if(index < 0)
-        {
-          tmpListData.push(data.data);
+      //   if(index < 0)
+      //   {
+      //     tmpListData.push(data.data);
   
-          // const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
+      //     // const ds = new ListView.DataSource({rowHasChanged: (r1, r2) => r1 !== r2});
       
-          this.setState({
-            listData : tmpListData,
-            dataSource: this.ds.cloneWithRows(tmpListData)
-          });
-        }
-      }
+      //     this.setState({
+      //       listData : tmpListData,
+      //       dataSource: this.ds.cloneWithRows(tmpListData)
+      //     });
+      //   }
+      // }
     }
     else{
       const tmpPackCode = this.state.parentPackCode;
@@ -377,16 +384,16 @@ export default class QRScanScreen extends React.Component {
     // var obj = JSON.parse(elementStr);
 
     // codeView = (<Text>{obj.code}</Text>);
-    // codeView = (<Text>{rowData.code}</Text>);
+    codeView = (<Text>{rowData.code}</Text>);
 
-    if(rowData.code)
-    {
-      codeView = (<Text>{rowData.code}</Text>);
-    }
-    else
-    {
-      codeView = (<Text>{rowData}</Text>);
-    }
+    // if(rowData.code)
+    // {
+    //   codeView = (<Text>{rowData.code}</Text>);
+    // }
+    // else
+    // {
+    //   codeView = (<Text>{rowData}</Text>);
+    // }
 
     if(rowData.gtin)
     {
@@ -648,9 +655,9 @@ export default class QRScanScreen extends React.Component {
             <View>
               <Icon
                     raised
-                    name='plus'
+                    name='qrcode'
                     type='font-awesome'
-                    // color=  {'#f50' }
+                    color=  {'#22b8cf' }
                     // disabled = {this.state.selectedItem ? false:true}
                     // color=  {this.state.selectedItem ? '#f50':'#D1D5D8' }
                     // disabledStyle = {{ backgroundColor: '#D1D5D8' }}

@@ -113,11 +113,19 @@ static navigationOptions = ({ navigation }) => {
 
     if (value !==  null) {
         // We have data!!
-        this.setState({
-          locationToken: value,
-        });
 
-        this.getProductListApiAsync();
+        this.setState({
+            locationToken: value,
+          });
+
+        var qrModel = this.state.QRModel;
+        if(qrModel == 'ITEM')
+        {
+            this.getProductListApiAsync();
+        }
+      }
+      else{
+          alert("locationToken can't find!!");
       }
 
 
@@ -138,10 +146,16 @@ static navigationOptions = ({ navigation }) => {
     }
 
     // sample for fetch request
-  getProductListApiAsync() {
+  getProductListApiAsync= () =>{
+    
+    var tmpItemList = [];
+
+    // alert("this.state.locationToken" + this.state.locationToken);
+
     fetch('http://153.149.186.12/exp/api/products',{ 
         headers: {
           'Authorization': "Bearer "+ this.state.locationToken,
+        //   'Authorization': "Bearer cc2d16a2-3a23-483d-a018-23eb7e095d3d",
         },
         method: 'GET',
       })
@@ -155,6 +169,9 @@ static navigationOptions = ({ navigation }) => {
                 tmpItemList.push({label: element.product_name,value: element.id,});
             })
 
+            // alert(tmpItemList);
+
+            // return (tmpItemList);
             this.setState({
                 itemList: tmpItemList,
             });
@@ -291,20 +308,20 @@ static navigationOptions = ({ navigation }) => {
             // elementStr = elementStr.replace(/\"/g,"'");
 
             // var htmlcode = "https://api.qrserver.com/v1/create-qr-code/?data="+ elementStr + "&amp;size=100x100";
-            var qrCodeStr = '';
+            var qrCodeStr = element.code;
 
-            if(qrModel == 'ITEM')
-            {
-                qrCodeStr = element.code;
-            }
-            else
-            {
-                qrCodeStr = elementStr;
-            }
+            // if(qrModel == 'ITEM')
+            // {
+            //     qrCodeStr = element.code;
+            // }
+            // else
+            // {
+            //     qrCodeStr = elementStr;
+            // }
             imgHtmlStr +=  "<p>"+qrCodeStr+"</p><img src=\""+ element.qrcode +"\"/>";
         });
     
-        var htmlStr = '<style>html, body { width: 5cm; height: 5cm; }</style>' + imgHtmlStr;
+        var htmlStr = '<style>html, body { width: 8cm; height: 3cm; }</style>' + imgHtmlStr;
         const options = {
         html : htmlStr,
         //orientation: Print.Orientation.landscape,
@@ -329,22 +346,9 @@ static navigationOptions = ({ navigation }) => {
   }
 
   _renderRow(rowData){
-    
-    var qrModel = this.state.QRModel;
-    let codeView;
-
-    if(qrModel == 'ITEM')
-    {
-      codeView = (<Text>{rowData.code}</Text>);
-    }
-    else
-    {
-        codeView = (<Text>{rowData}</Text>);
-    }
     return(
         <View style={styles.codeListContainer}>
-            {codeView}
-            {/* <Text>{rowData.code}</Text> */}
+            <Text>{rowData.code}</Text>
             <Image source={{uri:rowData.qrcode}}  style={styles.image} />
             {/* <QRCode
             value={JSON.stringify(rowData)}
