@@ -80,6 +80,7 @@ export default class QRScanScreen extends React.Component {
       scanIconDisabled : true,
       buttonGroupIndex: 0,
       parentPackCode: undefined,
+      showBarCodeReader: false,
     });
   }
 
@@ -308,10 +309,24 @@ export default class QRScanScreen extends React.Component {
   }
 
   _scanQRCodes=  () => {
-    this.popupDialog.show(() => {
+    this.popupDialog.show(() => {      this.setState({
+        showBarCodeReader : true,
+      });
+
+      this.setState({
+        showBarCodeReader : true,
+      });
+
       console.log('callback - show popupDialog');
     });
   };
+
+  _dismissPopupDialog = () => {
+    // alert("onDismiss");
+    this.setState({
+      showBarCodeReader : false,
+    });
+  }
 
   _clearQRCodes=  () => {
     this.setState({
@@ -507,6 +522,27 @@ export default class QRScanScreen extends React.Component {
       );
     }
     
+    let showBarCodeReaderView;
+
+    if(this.state.showBarCodeReader){
+      showBarCodeReaderView = (
+          <View style={styles.scannerContainer}>
+            {this.state.hasCameraPermission === null ?
+              <Text>Requesting for camera permission</Text> :
+              this.state.hasCameraPermission === false ?
+                <Text>Camera permission is not granted</Text> :
+                
+                <View>
+                  <BarCodeScanner
+                    onBarCodeRead={this._handleBarCodeRead}
+                    style={{ height: 260, width: 400}}
+                  />
+              </View>
+            }
+          </View>  
+      );
+    }
+    
     return (
       <View style={styles.container}>
           {parentBoxcodeView}
@@ -556,48 +592,15 @@ export default class QRScanScreen extends React.Component {
                     this.listView.scrollToEnd()
                 } }
 
-                // onLayout={
-                //   e => {
-                //       console.log("----------------ListView onLayout:" + e.nativeEvent.layout.height)
-                //       alert("----------------ListView onLayout listHeight:" + e.nativeEvent.layout.height)
-                //       this.listHeight = e.nativeEvent.layout.height
-                //   }
-                // }
-
-                // onLayout={(event) => {
-                //   var layout = event.nativeEvent.layout;
-                //   this.setState({
-                //       listHeight : layout.height
-                //   });
-                // }}
-
                 enableEmptySections={true}
                 dataSource={this.state.dataSource}
                 renderSeparator= {this.ListViewItemSeparatorLine}
                 // renderRow={this._renderRow}
                 renderRow={(rowData, sectionID, rowID, highlightRow) => this._renderRow(rowData, sectionID, rowID, highlightRow)}
-                // renderFooter = {() => {
-                //   return (
-                //       <View onLayout={ (e) => {
-                //           console.log("--------------------render footer: " + e.nativeEvent.layout.y)
-                //           alert("--------------------render footer: " + e.nativeEvent.layout.y)
-                //           this.footerY = e.nativeEvent.layout.y}
-                //       }></View>
-                //   )
-                // }}
 
-                // renderFooter={() => {
-
-                //   return <View onLayout={(event)=>{
-                //       var layout = event.nativeEvent.layout;
-                //       this.setState({
-                //           footerY : layout.y
-                //       });
-                //   }}></View>
-                // }}
             /> 
         </View>
-
+       
         <PopupDialog
             dialogAnimation={slideAnimation}
             dialogTitle={
@@ -606,7 +609,7 @@ export default class QRScanScreen extends React.Component {
               selectedBackgroundColor="pink"
               onPress={this._updateIndex}
               selectedIndex={this.state.buttonGroupIndex}
-              buttons={['Item/Box', 'Box of Box']}
+              buttons={['In Pack', 'Pack']}
               containerStyle={{height: 30}} 
               selectedTextStyle={styles.selectedTextStyle}
               />
@@ -614,23 +617,13 @@ export default class QRScanScreen extends React.Component {
           }
             ref={(popupDialog) => { this.popupDialog = popupDialog; }}
             dialogStyle={{marginTop:-200}}
+            // onDismissed={() => {
+            // }}
+            onDismissed={this._dismissPopupDialog}
             // height ={500}
           >
-          <View style={styles.scannerContainer}>
-            {this.state.hasCameraPermission === null ?
-              <Text>Requesting for camera permission</Text> :
-              this.state.hasCameraPermission === false ?
-                <Text>Camera permission is not granted</Text> :
-                
-                <View>
-                  <BarCodeScanner
-                    onBarCodeRead={this._handleBarCodeRead}
-                    style={{ height: 260, width: 400}}
-                  />
-              </View>
-            }
-          </View>               
-
+                       
+          {showBarCodeReaderView}
         </PopupDialog>
 
         {/* <View style = {styles.buttonContainerHomePage}> 
