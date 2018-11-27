@@ -545,45 +545,7 @@ export default class QRScanScreen extends React.Component {
     
     return (
       <View style={styles.container}>
-          {parentBoxcodeView}
-            {/* <FormLabel>Select a model?</FormLabel>
-
-            <View style = {styles.pickerContainer}>
-                <RNPickerSelect
-                        placeholder={{
-                            label: 'Select a model...',
-                            value: null,
-                        }}
-                        items={this.state.itemList}
-                        onValueChange={(value) => {
-                            this.setState({
-                                selectedItem: value,
-                            });
-                        }}
-                        onUpArrow={() => {
-                        }}
-                        onDownArrow={() => {
-                        }}
-                        style={{ ...pickerSelectStyles }}
-                        value={this.state.selectedItem}
-                        ref={(el) => {
-                            this.inputRefs.picker = el;
-                        }}
-                    />
-            </View> */}
-           
-           
-            {/* <View style = {styles.buttonViewStyle}>    
-              <Icon
-                raised
-                name='retweet'
-                type='font-awesome'
-                color=  {'#f50' }
-                // disabled = {this.state.selectedItem ? false:true}
-                // color=  {this.state.selectedItem ? '#f50':'#D1D5D8' }
-                // disabledStyle = {{ backgroundColor: '#D1D5D8' }}
-                onPress={() => this._scanQRCodes()} />  
-            </View>  */}
+        {parentBoxcodeView}
 
         <View style = { styles.listViewStyle }>
           <ListView
@@ -597,7 +559,6 @@ export default class QRScanScreen extends React.Component {
                 renderSeparator= {this.ListViewItemSeparatorLine}
                 // renderRow={this._renderRow}
                 renderRow={(rowData, sectionID, rowID, highlightRow) => this._renderRow(rowData, sectionID, rowID, highlightRow)}
-
             /> 
         </View>
        
